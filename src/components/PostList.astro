@@ -1,0 +1,33 @@
+---
+import { t } from "../ui";
+import type { Post } from "../utils/posts";
+import { hasDistinctAuthors, hasDistinctCategories } from "../utils/posts";
+import PostCard from "./PostCard.astro";
+
+interface Props {
+  posts: Post[];
+}
+
+const { posts } = Astro.props;
+const showAuthors = hasDistinctAuthors(posts);
+const showCategories = hasDistinctCategories(posts);
+---
+
+{
+  posts.length === 0 ? (
+    <p class="border-base-300 text-base-content/70 rounded-md border border-dashed px-6 py-10 text-center">
+      {t("list.empty")}
+    </p>
+  ) : (
+    <div id="post-list">
+      {posts.map((post, index) => (
+        <PostCard
+          post={post}
+          prioritizeLcp={index === 0}
+          showAuthors={showAuthors}
+          showCategories={showCategories}
+        />
+      ))}
+    </div>
+  )
+}

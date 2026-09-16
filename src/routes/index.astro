@@ -1,0 +1,511 @@
+---
+import { render } from "astro:content";
+import { Icon } from "astro-icon/components";
+import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
+import SmartImage from "../components/SmartImage.astro";
+import { SITE } from "@astro-theme-site/config";
+import {
+  contentType,
+  enabledContentTypes,
+  getPosts,
+  hasDistinctAuthors,
+  heroImage,
+  postAuthors,
+  postPath,
+  shouldShowHero,
+  sortPostsByDate,
+} from "../utils/posts";
+import { formatDate, isoDate, sitePath } from "../utils/site";
+
+const posts = await getPosts();
+const articles = posts.filter((post) => contentType(post) === "articles");
+const tips = posts.filter((post) => contentType(post) === "tips");
+const updates = posts.filter((post) => contentType(post) === "updates");
+const articlesConfig = SITE.contentTypes.articles;
+const tipsConfig = SITE.contentTypes.tips;
+const updatesConfig = SITE.contentTypes.updates;
+const TIP_LIMIT = tipsConfig?.landingPageLimit ?? 4;
+const ARTICLE_LIMIT = articlesConfig?.landingPageLimit ?? 5;
+const UPDATE_LIMIT = updatesConfig?.landingPageLimit ?? 5;
+const updateDays = Map.groupBy(
+  sortPostsByDate(updates).slice(0, UPDATE_LIMIT),
+  (post) =>
+    formatDate(post.data.pubDate, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }),
+);
+const chronological = sortPostsByDate(posts);
+const showcaseCandidates = chronological.filter(
+  (post) => contentType(post) !== "tips" && post.data.showcase !== "hide",
+);
+const featuredPosts = showcaseCandidates.filter(
+  (post) => post.data.showcase === "feature",
+);
+if (featuredPosts.length > 5) {
+  throw new Error("The homepage reel supports at most five featured posts.");
+}
+
+const reelIds = new Set(featuredPosts.map((post) => post.id));
+for (const type of enabledContentTypes) {
+  const newestOfType = showcaseCandidates.find(
+    (post) => contentType(post) === type,
+  );
+  if (newestOfType) reelIds.add(newestOfType.id);
+}
+if (reelIds.size > 5) {
+  throw new Error(
+    "The featured posts plus the newest post from each content category exceed the five-slide reel limit.",
+  );
+}
+for (const post of showcaseCandidates) {
+  if (reelIds.size >= 5) break;
+  reelIds.add(post.id);
+}
+
+const recentPosts = await Promise.all(
+  showcaseCandidates
+    .filter((post) => reelIds.has(post.id))
+    .map(async (post) => {
+      const type = contentType(post);
+      return {
+        post,
+        type,
+        image: heroImage(post),
+        hasImage: shouldShowHero(post),
+        PreviewContent: (await render(post)).Content,
+        useFormattedPreview: type !== "articles",
+        authors: postAuthors(post)
+          .map((author) => author.name)
+          .join(", "),
+      };
+    }),
+);
+const showRecentAuthors = hasDistinctAuthors(
+  recentPosts.map(({ post }) => post),
+);
+const tipEntries = await Promise.all(
+  tips
+    .slice(0, TIP_LIMIT)
+    .map(async (post) => ({ post, Content: (await render(post)).Content })),
+);
+---
+
+<BaseLayout title={SITE.title} description={SITE.description} hidePanel>
+  {
+    recentPosts.length > 0 && (
+      <section class="latest-block" aria-labelledby="latest-heading">
+        <header class="home-rule-heading">
+          <h1 id="latest-heading">Recent posts</h1>
+        </header>
+        <div
+          class="recent-reel"
+          data-recent-reel
+          tabindex="0"
+          aria-roledescription="carousel"
+        >
+          {recentPosts.length > 1 && (
+            <>
+              <button
+                class="recent-reel__arrow recent-reel__arrow--prev"
+                type="button"
+                data-reel-prev
+                aria-label="Previous post"
+              >
+                <Icon name="lucide:chevron-left" width={21} height={21} />
+              </button>
+              <button
+                class="recent-reel__arrow recent-reel__arrow--next"
+                type="button"
+                data-reel-next
+                aria-label="Next post"
+              >
+                <Icon name="lucide:chevron-right" width={21} height={21} />
+              </button>
+              <div
+                class="recent-reel__dots"
+                role="tablist"
+                aria-label="Choose a recent post"
+              >
+                {recentPosts.map(({ post }, index) => (
+                  <button
+                    type="button"
+                    role="tab"
+                    data-reel-dot={index}
+                    aria-label={`Show ${post.data.title}`}
+                    aria-selected={index === 0 ? "true" : "false"}
+                  >
+                    <span />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <div class="recent-reel__slides" aria-live="off">
+            {recentPosts.map(
+              (
+                {
+                  post,
+                  type,
+                  image,
+                  hasImage,
+                  PreviewContent,
+                  useFormattedPreview,
+                  authors,
+                },
+                index,
+              ) => (
+                <article
+                  class:list={[
+                    "latest-story",
+                    hasImage && image ? "has-image" : "",
+                  ]}
+                  data-content-type={type}
+                  data-reel-slide={index}
+                  aria-roledescription="slide"
+                  aria-label={`${index + 1} of ${recentPosts.length}`}
+                  hidden={index !== 0}
+                >
+                  <div class="latest-story__copy">
+                    <div class="latest-story__title-line">
+                      <h3>
+                        <a href={postPath(post)}>{post.data.title}</a>
+                      </h3>
+                      <div class="latest-story__byline">
+                        <span
+                          class={`content-label content-label--${type.slice(0, -1)}`}
+                        >
+                          {SITE.contentTypes[type]!.singularLabel}
+                        </span>
+                        {showRecentAuthors && (
+                          <>
+                            <span class="latest-story__author">
+                              By {authors}
+                            </span>
+                            <span
+                              class="latest-story__separator"
+                              aria-hidden="true"
+                            >
+                              ·
+                            </span>
+                          </>
+                        )}
+                        <time datetime={isoDate(post.data.pubDate)}>
+                          {formatDate(post.data.pubDate)}
+                        </time>
+                      </div>
+                    </div>
+                    {useFormattedPreview ? (
+                      <div class="latest-story__preview latest-story__preview--formatted prose-site">
+                        <PreviewContent />
+                      </div>
+                    ) : (
+                      <p class="latest-story__preview latest-story__description">
+                        {post.data.description}
+                      </p>
+                    )}
+                    <a href={postPath(post)} class="latest-story__read">
+                      Read{" "}
+                      {SITE.contentTypes[
+                        type
+                      ]!.singularLabel.toLocaleLowerCase()}{" "}
+                      <Icon name="lucide:arrow-right" width={17} height={17} />
+                    </a>
+                  </div>
+                  {hasImage && image && (
+                    <a
+                      href={postPath(post)}
+                      class="latest-story__image"
+                      tabindex="-1"
+                      aria-hidden="true"
+                    >
+                      <SmartImage
+                        src={image}
+                        alt=""
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchpriority={index === 0 ? "high" : "auto"}
+                        widths={[480, 800, 1200]}
+                        sizes="(max-width: 767px) 100vw, 35vw"
+                        quality={80}
+                      />
+                    </a>
+                  )}
+                </article>
+              ),
+            )}
+          </div>
+          <p class="sr-only" data-reel-status />
+        </div>
+        <nav class="showcase-counts" aria-label="Browse all posts by type">
+          {
+            tipsConfig && (
+              <a href={sitePath("/tips")}>
+                <span>{String(tips.length).padStart(2, "0")}</span>{" "}
+                {tipsConfig.label}
+              </a>
+            )
+          }
+          {
+            articlesConfig && (
+              <a href={sitePath("/articles")}>
+                <span>{String(articles.length).padStart(2, "0")}</span>{" "}
+                {articlesConfig.label}
+              </a>
+            )
+          }
+          {
+            updatesConfig && (
+              <a href={sitePath("/updates")}>
+                <span>{String(updates.length).padStart(2, "0")}</span>{" "}
+                {updatesConfig.label}
+              </a>
+            )
+          }
+        </nav>
+      </section>
+    )
+  }
+
+  <div class="home-feeds">
+    {
+      tipsConfig && tipEntries.length > 0 && (
+        <section
+          class="feed-section feed-section--tips"
+          aria-labelledby="tips-heading"
+        >
+          <header class="home-rule-heading">
+            <div>
+              <>
+                <span aria-hidden="true">//</span>
+                <h2 id="tips-heading">{tipsConfig.label}</h2>
+              </>
+            </div>
+          </header>
+          <div class="tip-feed">
+            {tipEntries.map(({ post, Content }, index) => (
+              <article class="tip-feed__item">
+                <span class="tip-feed__index">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3>
+                    <a class="tip-feed__link" href={postPath(post)}>
+                      {post.data.title}
+                    </a>
+                  </h3>
+                  <div class="tip-feed__body prose-site">
+                    <Content />
+                  </div>
+                </div>
+                <span class="tip-feed__permalink" aria-hidden="true">
+                  <Icon name="lucide:arrow-up-right" width={17} height={17} />
+                </span>
+              </article>
+            ))}
+          </div>
+          {tips.length > TIP_LIMIT && (
+            <a class="feed-more" href={sitePath("/tips")}>
+              View more {tipsConfig.label.toLocaleLowerCase()}{" "}
+              <Icon name="lucide:arrow-right" width={15} height={15} />
+            </a>
+          )}
+        </section>
+      )
+    }
+
+    {
+      articlesConfig && (
+        <section
+          class="feed-section feed-section--articles"
+          aria-labelledby="articles-heading"
+        >
+          <header class="home-rule-heading">
+            <div>
+              <>
+                <span aria-hidden="true">{`{}`}</span>
+                <h2 id="articles-heading">{articlesConfig.label}</h2>
+              </>
+            </div>
+          </header>
+          {articles.length > 0 ? (
+            <div class="article-feed">
+              {articles.slice(0, ARTICLE_LIMIT).map((post) => (
+                <a href={postPath(post)} class="article-feed__item">
+                  <div>
+                    <time datetime={isoDate(post.data.pubDate)}>
+                      {formatDate(post.data.pubDate, {
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </time>
+                    <h3>{post.data.title}</h3>
+                    <p>{post.data.description}</p>
+                  </div>
+                  <Icon name="lucide:arrow-right" width={18} height={18} />
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p class="feed-empty">
+              No {articlesConfig.label.toLocaleLowerCase()} have been published
+              yet.
+            </p>
+          )}
+          {articles.length > ARTICLE_LIMIT && (
+            <a class="feed-more" href={sitePath("/articles")}>
+              View more {articlesConfig.label.toLocaleLowerCase()}{" "}
+              <Icon name="lucide:arrow-right" width={15} height={15} />
+            </a>
+          )}
+        </section>
+      )
+    }
+
+    {
+      updatesConfig && (
+        <section
+          class="feed-section feed-section--updates"
+          aria-labelledby="updates-heading"
+        >
+          <header class="home-rule-heading">
+            <div>
+              <>
+                <span aria-hidden="true">++</span>
+                <h2 id="updates-heading">{updatesConfig.label}</h2>
+              </>
+            </div>
+          </header>
+          {updates.length > 0 ? (
+            <ol class="update-feed">
+              {Array.from(updateDays, ([date, dayPosts]) => (
+                <li class="update-feed__day">
+                  <h3 class="update-feed__date">
+                    <time datetime={isoDate(dayPosts[0].data.pubDate)}>
+                      {date}
+                    </time>
+                  </h3>
+                  <ol class="update-feed__posts">
+                    {dayPosts.map((post) => (
+                      <li>
+                        <a href={postPath(post)}>
+                          <h4>{post.data.title}</h4>
+                          <p>{post.data.description}</p>
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p class="feed-empty">
+              No {updatesConfig.label.toLocaleLowerCase()} have been published
+              yet.
+            </p>
+          )}
+          {updates.length > UPDATE_LIMIT && (
+            <a class="feed-more" href={sitePath("/updates")}>
+              View more {updatesConfig.label.toLocaleLowerCase()}{" "}
+              <Icon name="lucide:arrow-right" width={15} height={15} />
+            </a>
+          )}
+        </section>
+      )
+    }
+  </div>
+</BaseLayout>
+
+<script>
+  function setupRecentReel() {
+    document
+      .querySelectorAll<HTMLElement>("[data-recent-reel]")
+      .forEach((reel) => {
+        if (reel.dataset.bound) return;
+        reel.dataset.bound = "true";
+        const slides = Array.from(
+          reel.querySelectorAll<HTMLElement>("[data-reel-slide]"),
+        );
+        const dots = Array.from(
+          reel.querySelectorAll<HTMLButtonElement>("[data-reel-dot]"),
+        );
+        const status = reel.querySelector<HTMLElement>("[data-reel-status]");
+        const slideRegion = reel.querySelector<HTMLElement>(
+          ".recent-reel__slides",
+        );
+        let current = 0;
+
+        if (slides.length < 2) return;
+
+        function show(index: number) {
+          current = (index + slides.length) % slides.length;
+          slides.forEach((slide, i) =>
+            slide.toggleAttribute("hidden", i !== current),
+          );
+          dots.forEach((dot, i) =>
+            dot.setAttribute("aria-selected", String(i === current)),
+          );
+          if (status)
+            status.textContent = `Showing post ${current + 1} of ${slides.length}`;
+        }
+
+        reel
+          .querySelector("[data-reel-prev]")
+          ?.addEventListener("click", () => show(current - 1));
+        reel
+          .querySelector("[data-reel-next]")
+          ?.addEventListener("click", () => show(current + 1));
+        dots.forEach((dot, index) =>
+          dot.addEventListener("click", () => show(index)),
+        );
+        reel.addEventListener("keydown", (event) => {
+          if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            show(current - 1);
+          }
+          if (event.key === "ArrowRight") {
+            event.preventDefault();
+            show(current + 1);
+          }
+        });
+        reel.addEventListener("focusin", () =>
+          slideRegion?.setAttribute("aria-live", "polite"),
+        );
+        reel.addEventListener("focusout", () =>
+          slideRegion?.setAttribute("aria-live", "off"),
+        );
+
+        let touchStart = 0;
+        reel.addEventListener(
+          "touchstart",
+          (event) => {
+            touchStart = event.changedTouches[0]?.clientX ?? 0;
+          },
+          { passive: true },
+        );
+        reel.addEventListener(
+          "touchend",
+          (event) => {
+            const distance =
+              (event.changedTouches[0]?.clientX ?? touchStart) - touchStart;
+            if (Math.abs(distance) > 45)
+              show(current + (distance < 0 ? 1 : -1));
+          },
+          { passive: true },
+        );
+
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+          reel.addEventListener("animationend", (event) => {
+            const activeProgress = dots[current]?.querySelector("span");
+            if (
+              event.animationName === "reel-progress" &&
+              event.target === activeProgress
+            )
+              show(current + 1);
+          });
+        }
+      });
+  }
+  document.addEventListener("astro:page-load", setupRecentReel);
+</script>

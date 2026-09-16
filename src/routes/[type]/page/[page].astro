@@ -1,0 +1,37 @@
+---
+import CollectionPage from "@tsche/astro-blog-theme/routes/[type]/index.astro";
+import { SITE } from "@astro-theme-site/config";
+import {
+  contentType,
+  enabledContentTypes,
+  getPosts,
+  type ContentType,
+} from "@tsche/astro-blog-theme/posts";
+
+interface Props {
+  type: ContentType;
+  currentPage: number;
+}
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return enabledContentTypes.flatMap((type) => {
+    const typeConfig = SITE.contentTypes[type]!;
+    const pageSize = typeConfig.postsPerPage ?? SITE.postsPerPage;
+    const postCount = posts.filter((post) => contentType(post) === type).length;
+    const lastPage = Math.ceil(postCount / pageSize);
+
+    return Array.from({ length: Math.max(0, lastPage - 1) }, (_, index) => {
+      const currentPage = index + 2;
+      return {
+        params: { type, page: String(currentPage) },
+        props: { type, currentPage },
+      };
+    });
+  });
+}
+
+const { type, currentPage } = Astro.props as Props;
+---
+
+<CollectionPage type={type} currentPage={currentPage} />

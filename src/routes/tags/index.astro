@@ -1,0 +1,31 @@
+---
+import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
+import { t } from "@tsche/astro-blog-theme/ui";
+import { getTagsWithCount, tagPath } from "@tsche/astro-blog-theme/posts";
+import { Icon } from "astro-icon/components";
+
+const tags = await getTagsWithCount();
+---
+
+<BaseLayout title={t("tags.title")} crumbs={[{ label: t("tags.title") }]}>
+  <header class="mb-6">
+    <h1 class="text-3xl font-bold tracking-tight">{t("tags.title")}</h1>
+  </header>
+  {
+    tags.length === 0 ? (
+      <p class="text-base-content/70">{t("tags.empty")}</p>
+    ) : (
+      <ul class="flex flex-wrap gap-2">
+        {tags.map((tag) => (
+          <li>
+            <a href={tagPath(tag.name)} class="badge badge-lg gap-1">
+              <Icon name="lucide:tag" width={12} height={12} />
+              {tag.name}
+              <span class="text-base-content/70">{tag.count}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+</BaseLayout>

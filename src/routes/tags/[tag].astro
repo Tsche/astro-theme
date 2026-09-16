@@ -1,0 +1,49 @@
+---
+import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
+import PostList from "@tsche/astro-blog-theme/components/PostList.astro";
+import { t } from "@tsche/astro-blog-theme/ui";
+import { sitePath } from "@tsche/astro-blog-theme/site";
+import {
+  getPosts,
+  getTagsWithCount,
+  slugify,
+} from "@tsche/astro-blog-theme/posts";
+
+interface Props {
+  tagName: string;
+}
+
+export async function getStaticPaths() {
+  const tags = await getTagsWithCount();
+  return tags.map((tag) => ({
+    params: { tag: slugify(tag.name) },
+    props: { tagName: tag.name },
+  }));
+}
+
+const { tagName } = Astro.props as Props;
+const { tag } = Astro.params;
+const posts = (await getPosts()).filter((p) =>
+  p.data.tags.some((tg) => slugify(tg) === tag),
+);
+---
+
+<BaseLayout
+  title={`#${tagName}`}
+  crumbs={[
+    { label: t("tags.title"), href: sitePath("/tags/") },
+    { label: `#${tagName}` },
+  ]}
+>
+  <header class="mb-6">
+    <p class="text-base-content/70 text-sm tracking-wide uppercase">
+      {t("list.tagPosts")}
+    </p>
+    <h1 class="text-3xl font-bold tracking-tight">#{tagName}</h1>
+    <p class="text-base-content/70 mt-1 text-sm">
+      {posts.length}
+      {posts.length === 1 ? t("list.totalPostsOne") : t("list.totalPosts")}
+    </p>
+  </header>
+  <PostList posts={posts} />
+</BaseLayout>

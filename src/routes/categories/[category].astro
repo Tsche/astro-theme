@@ -1,0 +1,50 @@
+---
+import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
+import PostList from "@tsche/astro-blog-theme/components/PostList.astro";
+import { t } from "@tsche/astro-blog-theme/ui";
+import { sitePath } from "@tsche/astro-blog-theme/site";
+import {
+  getPosts,
+  getCategoriesWithCount,
+  slugify,
+} from "@tsche/astro-blog-theme/posts";
+
+interface Props {
+  categoryName: string;
+}
+
+export async function getStaticPaths() {
+  const categories = await getCategoriesWithCount();
+  return categories.map((category) => ({
+    params: { category: slugify(category.name) },
+    props: { categoryName: category.name },
+  }));
+}
+
+const { categoryName } = Astro.props as Props;
+const { category } = Astro.params;
+const posts = (await getPosts()).filter(
+  (p) =>
+    p.data.categories && p.data.categories.some((c) => slugify(c) === category),
+);
+---
+
+<BaseLayout
+  title={categoryName}
+  crumbs={[
+    { label: t("categories.title"), href: sitePath("/categories/") },
+    { label: categoryName },
+  ]}
+>
+  <header class="mb-6">
+    <p class="text-base-content/70 text-sm tracking-wide uppercase">
+      {t("list.categoryPosts")}
+    </p>
+    <h1 class="text-3xl font-bold tracking-tight">{categoryName}</h1>
+    <p class="text-base-content/70 mt-1 text-sm">
+      {posts.length}
+      {posts.length === 1 ? t("list.totalPostsOne") : t("list.totalPosts")}
+    </p>
+  </header>
+  <PostList posts={posts} />
+</BaseLayout>

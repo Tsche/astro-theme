@@ -1,0 +1,164 @@
+---
+import { SITE } from "@astro-theme-site/config";
+import { formatDate, isoDate } from "../utils/site";
+import {
+  contentType,
+  type Post,
+  postAuthors,
+  postPath,
+  collectionFilterPath,
+  categoryPath,
+  overviewTags,
+  heroImage,
+  shouldShowHero,
+} from "../utils/posts";
+import SmartImage from "../components/SmartImage.astro";
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  post: Post;
+  prioritizeLcp?: boolean;
+  showAuthors?: boolean;
+  showCategories?: boolean;
+}
+
+const {
+  post,
+  prioritizeLcp = false,
+  showAuthors = true,
+  showCategories = true,
+} = Astro.props;
+const href = postPath(post);
+const heroAsset = heroImage(post);
+const hasImage = Boolean(heroAsset) && shouldShowHero(post);
+const type = contentType(post);
+const heroAlt = post.data.heroImageAlt ?? "";
+const isDynamicCardHeight =
+  post.data.dynamicPostCardHeight ?? SITE.dynamicPostCardHeight;
+const authors = postAuthors(post);
+const publishedDate = isoDate(post.data.pubDate).slice(0, 10);
+const visibleTags = overviewTags(post);
+---
+
+<article
+  class="site-card"
+  data-content-type={type}
+  data-filter-item
+  data-filter-date={publishedDate}
+  data-filter-authors={JSON.stringify(authors.map(({ name }) => name))}
+  data-filter-tags={JSON.stringify(post.data.tags)}
+>
+  {
+    hasImage && (
+      <a
+        href={href}
+        class:list={[
+          "site-card-link has-image",
+          isDynamicCardHeight ? "dynamic-size" : "fixed-size",
+        ]}
+        aria-label={post.data.title}
+        tabindex="-1"
+      >
+        <div class="site-card-image-wrap">
+          <SmartImage
+            src={heroAsset!}
+            alt={heroAlt}
+            class="site-card-image"
+            loading={prioritizeLcp ? "eager" : "lazy"}
+            fetchpriority={prioritizeLcp ? "high" : "auto"}
+            widths={[384, 768, 960]}
+            sizes="(max-width: 767px) 100vw, 378px"
+            quality={75}
+          />
+        </div>
+      </a>
+    )
+  }
+
+  <div class:list={["site-card-body", hasImage ? "" : "full"]}>
+    <h2 class:list={["site-card-title", hasImage ? "" : "compact"]}>
+      <a href={href}>{post.data.title}</a>
+    </h2>
+
+    <p
+      class:list={[
+        "text-base-content/70 text-base",
+        hasImage ? "mt-2 mb-3 line-clamp-2" : "mt-1 mb-2 line-clamp-3",
+      ]}
+    >
+      {post.data.description}
+    </p>
+
+    <div
+      class="text-base-content/70 mt-3 flex items-end justify-between gap-2 text-xs"
+    >
+      <div class="post-card-metadata">
+        {
+          showAuthors && (
+            <span class="metadata-byline">
+              <span>By</span>{" "}
+              {authors.map((author, index) => (
+                <>
+                  {index > 0 && <span>, </span>}
+                  <a href={collectionFilterPath(type, "author", author.name)}>
+                    {author.name}
+                  </a>
+                </>
+              ))}
+            </span>
+          )
+        }
+        <a
+          class="metadata-link inline-flex items-center gap-1"
+          href={collectionFilterPath(type, "date", publishedDate)}
+        >
+          <Icon name="lucide:clock" width={12} height={12} />
+          <time datetime={isoDate(post.data.pubDate)}>
+            {
+              formatDate(post.data.pubDate, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            }
+          </time>
+        </a>
+        {
+          showCategories &&
+            post.data.categories.map((category) => (
+              <a
+                class="metadata-link inline-flex items-center gap-1"
+                href={categoryPath(category)}
+              >
+                <Icon name="lucide:folder" width={12} height={12} />
+                <span>{category}</span>
+              </a>
+            ))
+        }
+        {
+          visibleTags.map((tag) => (
+            <a
+              class="post-card-tag"
+              href={collectionFilterPath(type, "tag", tag)}
+            >
+              <Icon name="lucide:tag" width={11} height={11} />
+              <span>{tag}</span>
+            </a>
+          ))
+        }
+      </div>
+
+      {
+        post.data.pinned && (
+          <span
+            class="text-primary inline-flex items-center gap-1"
+            title="Pinned"
+            aria-label="Pinned"
+          >
+            <Icon name="lucide:pin" width={14} height={14} />
+          </span>
+        )
+      }
+    </div>
+  </div>
+</article>

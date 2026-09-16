@@ -1,0 +1,99 @@
+---
+/**
+ * Global masthead. The filename is retained to avoid churn in layouts, but
+ * this replaces the old fixed blog sidebar with a compact publication header.
+ */
+import { Icon } from "astro-icon/components";
+import { NAV, SITE } from "@astro-theme-site/config";
+import { t } from "../ui";
+import { sitePath } from "../utils/site";
+import ThemeToggle from "./ThemeToggle.astro";
+
+const home = sitePath("/");
+const navItems = NAV.top.map((item) => ({
+  ...item,
+  href: item.href.startsWith("/") ? sitePath(item.href) : item.href,
+}));
+---
+
+<header class="masthead" aria-label="Site header">
+  <div class="masthead__inner">
+    <a href={home} class="brand" aria-label={`${SITE.title} home`}>
+      <span class="brand__mark" aria-hidden="true">
+        <slot name="brand-mark" />
+      </span>
+      <span class="brand__text">
+        <slot name="brand-text" />
+      </span>
+    </a>
+
+    <nav class="masthead__nav" aria-label="Main navigation">
+      {
+        navItems.map((item) => {
+          const target = item.href.replace(/\/+$/, "") || "/";
+          const current = Astro.url.pathname.replace(/\/+$/, "") || "/";
+          const active =
+            current === target ||
+            (target !== "/" && current.startsWith(`${target}/`));
+          return (
+            <a
+              href={item.href}
+              class="masthead__link"
+              aria-current={active ? "page" : undefined}
+            >
+              {item.label}
+            </a>
+          );
+        })
+      }
+    </nav>
+
+    <div class="masthead__actions">
+      <a
+        href={sitePath("/search")}
+        class="masthead__icon"
+        aria-label={t("nav.search")}
+      >
+        <Icon name="lucide:search" width={18} height={18} />
+      </a>
+      <ThemeToggle
+        label={t("theme.toggle")}
+        lightLabel={t("theme.light")}
+        darkLabel={t("theme.dark")}
+      />
+      <button
+        type="button"
+        class="masthead__icon masthead__menu"
+        data-mobile-menu-toggle
+        aria-label={t("nav.toggleMenu")}
+        aria-expanded="false"
+        aria-controls="mobile-navigation"
+      >
+        <Icon name="lucide:menu" width={20} height={20} />
+      </button>
+    </div>
+  </div>
+
+  <div id="mobile-navigation" class="mobile-nav" data-mobile-menu hidden>
+    <nav aria-label="Mobile navigation">
+      {navItems.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+  </div>
+</header>
+
+<script>
+  function setupMobileMenu() {
+    const toggle = document.querySelector<HTMLElement>(
+      "[data-mobile-menu-toggle]",
+    );
+    const menu = document.querySelector<HTMLElement>("[data-mobile-menu]");
+    if (!toggle || !menu || toggle.dataset.bound) return;
+    toggle.dataset.bound = "true";
+    toggle.addEventListener("click", () => {
+      const open = menu.hasAttribute("hidden");
+      menu.toggleAttribute("hidden", !open);
+      toggle.setAttribute("aria-expanded", String(open));
+    });
+  }
+  document.addEventListener("astro:page-load", setupMobileMenu);
+</script>

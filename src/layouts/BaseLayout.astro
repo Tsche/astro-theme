@@ -1,0 +1,180 @@
+---
+import "@astro-theme-site-styles";
+import { Font } from "astro:assets";
+import Sidebar from "@astro-theme-site/components/Sidebar.astro";
+import Topbar from "@tsche/astro-blog-theme/components/Topbar.astro";
+import Footer from "@tsche/astro-blog-theme/components/Footer.astro";
+import SEO from "@tsche/astro-blog-theme/components/SEO.astro";
+import BackToTop from "@tsche/astro-blog-theme/components/BackToTop.astro";
+import SiteDecoration from "@astro-theme-site/components/SiteDecoration.astro";
+import { ClientRouter } from "astro:transitions";
+import { SITE, SITE_IMAGES } from "@astro-theme-site/config";
+import { t } from "@tsche/astro-blog-theme/ui";
+import { withBase } from "@tsche/astro-blog-theme/site";
+import { buildSeo, type SeoMeta } from "@tsche/astro-blog-theme/seo";
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogImage?: string;
+  type?: "website" | "article";
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  tags?: string[];
+  /** Hide the right panel (e.g. on post pages where TOC takes its place). */
+  hidePanel?: boolean;
+  /** Constrain main content width (used by Pages like About/404). */
+  narrow?: boolean;
+  /** Breadcrumb segments shown in the topbar. */
+  crumbs?: Array<{ label: string; href?: string }>;
+  /** Pre-built SEO meta override. */
+  seo?: SeoMeta;
+}
+
+const {
+  title,
+  description,
+  ogImage,
+  type = "website",
+  publishedTime,
+  modifiedTime,
+  tags,
+  hidePanel = false,
+  narrow = false,
+  crumbs = [],
+  seo,
+} = Astro.props;
+const meta: SeoMeta =
+  seo ??
+  buildSeo({
+    title,
+    description,
+    fullPath: Astro.url.pathname,
+    ogImage,
+    type,
+    publishedTime,
+    modifiedTime,
+    tags,
+  });
+const hasAside = Astro.slots.has("aside-bottom");
+const umami = SITE.analytics?.umami;
+const umamiEnabled = Boolean(umami?.websiteId);
+---
+
+<!doctype html>
+<html lang="en" data-theme="astro-blog-light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#f7f6f0"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#15151c"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href={withBase(SITE_IMAGES.favicon.src)}
+    />
+    <SEO meta={meta} />
+    {/* Custom fonts configured via Astro Fonts API */}
+    <Font cssVariable="--font-source-sans-3" />
+    <Font cssVariable="--font-jetbrains-mono" preload />
+    <ClientRouter />
+    {
+      umamiEnabled && (
+        <script
+          is:inline
+          defer
+          src={umami?.scriptUrl ?? "https://cloud.umami.is/script.js"}
+          data-website-id={umami?.websiteId}
+          data-domains={umami?.domains?.join(",")}
+          data-do-not-track={umami?.respectDoNotTrack ? "true" : undefined}
+        />
+      )
+    }
+    {/* Apply persisted theme as early as possible to avoid FOUC. */}
+    <script is:inline>
+      (function () {
+        function applyTheme() {
+          try {
+            var stored = localStorage.getItem("theme");
+            var prefersDark = window.matchMedia(
+              "(prefers-color-scheme: dark)",
+            ).matches;
+            var valid =
+              stored === "astro-blog-dark" || stored === "astro-blog-light";
+            var theme = valid
+              ? stored
+              : prefersDark
+                ? "astro-blog-dark"
+                : "astro-blog-light";
+            if (!valid && stored) localStorage.setItem("theme", theme);
+            document.documentElement.setAttribute("data-theme", theme);
+          } catch {
+            /* ignore */
+          }
+        }
+        applyTheme();
+        // Re-apply after view transitions swap in a fresh <html data-theme>.
+        document.addEventListener("astro:after-swap", applyTheme);
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a
+      href="#main"
+      class="focus:bg-primary focus:text-primary-content sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:px-3 focus:py-2"
+    >
+      {t("site.skipToContent")}
+    </a>
+
+    <Sidebar />
+
+    <div class="site-main-wrapper">
+      <div class="site-shell">
+        {crumbs.length > 0 && <Topbar crumbs={crumbs} />}
+
+        <div
+          class:list={[
+            "site-content-grid",
+            hasAside && !hidePanel ? "has-aside" : "",
+          ]}
+        >
+          <div class="flex min-w-0 flex-1 flex-col">
+            <main
+              id="main"
+              aria-label="Main Content"
+              class:list={[
+                "min-w-0 flex-1",
+                narrow ? "mx-auto w-full max-w-3xl" : "",
+              ]}
+            >
+              <slot />
+            </main>
+
+            <Footer />
+          </div>
+
+          {
+            !hidePanel && hasAside && (
+              <aside class="site-panel-rail" aria-label="Sidebar widgets">
+                <slot name="aside-bottom" />
+              </aside>
+            )
+          }
+        </div>
+      </div>
+    </div>
+
+    <BackToTop />
+    <SiteDecoration />
+  </body>
+</html>

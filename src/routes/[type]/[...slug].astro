@@ -1,0 +1,58 @@
+---
+import { render } from "astro:content";
+import PostLayout from "@tsche/astro-blog-theme/layouts/PostLayout.astro";
+import {
+  contentType,
+  getPosts,
+  getUnlistedPosts,
+  postSlug,
+  sortPostsByDate,
+  type Post,
+} from "@tsche/astro-blog-theme/posts";
+
+interface Props {
+  post: Post;
+  prev?: Post;
+  next?: Post;
+}
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  const chronological = sortPostsByDate(posts);
+  const paths: Array<{ params: { type: string; slug: string }; props: Props }> =
+    posts.map((post) => {
+      const index = chronological.findIndex(
+        (candidate) => candidate.id === post.id,
+      );
+      return {
+        params: { type: contentType(post), slug: postSlug(post) },
+        props: {
+          post,
+          prev: chronological[index + 1],
+          next: chronological[index - 1],
+        },
+      };
+    });
+
+  paths.push(
+    ...(await getUnlistedPosts()).map((post) => ({
+      params: { type: contentType(post), slug: postSlug(post) },
+      props: { post },
+    })),
+  );
+  return paths;
+}
+
+const { post, prev, next } = Astro.props as Props;
+const { Content, headings } = await render(post);
+---
+
+<PostLayout
+  post={post}
+  headings={headings}
+  body={post.body ?? ""}
+  prev={prev}
+  next={next}
+>
+  <Content />
+</PostLayout>

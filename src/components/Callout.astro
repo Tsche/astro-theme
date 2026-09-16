@@ -1,0 +1,21 @@
+---
+/**
+ * Reusable callout for MDX content. Use as:
+ *   <Callout type="info" title="Heads up">…</Callout>
+ */
+
+interface Props {
+  type?: "info" | "success" | "important" | "warning" | "caution" | "error";
+  title?: string;
+}
+
+const { type = "info", title } = Astro.props;
+---
+
+<aside
+  class:list={["callout", `callout-${type}`, title && "callout--titled"]}
+  role="note"
+>
+  {title && <p class="callout__title">{title}</p>}
+  <div><slot /></div>
+</aside>

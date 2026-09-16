@@ -1,0 +1,248 @@
+---
+import { readFile } from "node:fs/promises";
+import { isAbsolute, relative, resolve } from "node:path";
+import { codeToHtml } from "shiki";
+import {
+  createGodboltUrl,
+  parseSourceRange,
+  selectSource,
+  visibleHighlightRanges,
+  type GodboltOptions,
+} from "../utils/code-block";
+
+interface Props {
+  code?: string;
+  /** Build-time path, resolved from the consuming project's root. */
+  src?: string;
+  lang?: string;
+  filename?: string;
+  title?: string;
+  range?: string;
+  highlightLines?: string;
+  lineNumbers?: boolean;
+  copy?: boolean;
+  godbolt?: boolean | (GodboltOptions & { sourcePath?: string });
+  class?: string;
+}
+
+const {
+  code,
+  src,
+  lang = "cpp",
+  filename,
+  title,
+  range: rangeText,
+  highlightLines,
+  lineNumbers = true,
+  copy = false,
+  godbolt = false,
+  class: className,
+} = Astro.props;
+
+if ((code === undefined) === (src === undefined)) {
+  throw new Error("CodeBlock requires exactly one of `code` or `src`.");
+}
+
+const projectRoot = resolve(process.cwd());
+let fullSource = code ?? "";
+let resolvedFilename = filename;
+if (src) {
+  const sourcePath = resolve(projectRoot, src);
+  const relativePath = relative(projectRoot, sourcePath);
+  if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
+    throw new Error(`CodeBlock source must stay inside the project: ${src}`);
+  }
+  fullSource = await readFile(sourcePath, "utf8");
+  resolvedFilename ??= relativePath;
+}
+
+const range = parseSourceRange(rangeText);
+const displayedSource = selectSource(fullSource, range);
+const marks = visibleHighlightRanges(highlightLines, range);
+const highlightedLines = new Set<number>();
+for (const mark of marks) {
+  const [start, end = start] = mark.split("-").map(Number);
+  for (let line = start; line <= end; line++) highlightedLines.add(line);
+}
+const startLineNumber = range?.startLine ?? 1;
+const highlightedHtml = await codeToHtml(displayedSource, {
+  lang,
+  themes: {
+    light: "github-light",
+    dark: "github-dark-dimmed",
+  },
+  transformers: [
+    {
+      line(node, line) {
+        node.properties["data-line"] = startLineNumber + line - 1;
+        if (highlightedLines.has(line))
+          node.properties.class = `${node.properties.class ?? "line"} highlighted`;
+      },
+    },
+  ],
+});
+const godboltOptions = typeof godbolt === "object" ? godbolt : {};
+let godboltSource = godboltOptions.source;
+if (godboltOptions.sourcePath) {
+  const sourcePath = resolve(projectRoot, godboltOptions.sourcePath);
+  const relativePath = relative(projectRoot, sourcePath);
+  if (relativePath.startsWith("..") || isAbsolute(relativePath)) {
+    throw new Error(
+      `CodeBlock Compiler Explorer source must stay inside the project: ${godboltOptions.sourcePath}`,
+    );
+  }
+  godboltSource = await readFile(sourcePath, "utf8");
+}
+const godboltHref = godbolt
+  ? createGodboltUrl(displayedSource, {
+      filename: resolvedFilename,
+      ...godboltOptions,
+      source: godboltSource,
+    })
+  : undefined;
+---
+
+<div
+  class:list={["static-code-block", className]}
+  data-line-numbers={lineNumbers || undefined}
+  data-static-code
+>
+  {
+    (title || resolvedFilename) && (
+      <div class="static-code-block__title">{title ?? resolvedFilename}</div>
+    )
+  }
+  {
+    copy && (
+      <button
+        type="button"
+        class="static-code-block__copy"
+        data-static-code-copy
+      >
+        Copy
+      </button>
+    )
+  }
+  <Fragment set:html={highlightedHtml} />
+  {
+    godboltHref && (
+      <a
+        class="static-code-block__godbolt"
+        href={godboltHref}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open in Compiler Explorer
+      </a>
+    )
+  }
+</div>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>("[data-static-code-copy]")
+    .forEach((button) => {
+      if (button.dataset.ready) return;
+      button.dataset.ready = "true";
+      button.addEventListener("click", async () => {
+        const block = button.closest<HTMLElement>("[data-static-code]");
+        if (!block) return;
+        await navigator.clipboard.writeText(
+          block.querySelector("pre code")?.textContent ?? "",
+        );
+        button.textContent = "Copied";
+        setTimeout(() => (button.textContent = "Copy"), 1500);
+      });
+    });
+</script>
+
+<style is:global>
+  .static-code-block {
+    position: relative;
+    margin: 2rem 0;
+    font-family: var(--font-mono);
+  }
+
+  .static-code-block__title {
+    border: 1px solid var(--color-base-300);
+    border-bottom: 0;
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 0.55rem 1rem;
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    font-size: 0.78rem;
+  }
+
+  .static-code-block .shiki {
+    margin: 0;
+    overflow-x: auto;
+    border: 1px solid var(--color-base-300);
+    border-radius: 0.5rem;
+    padding: 1rem 0;
+    background: var(--shiki-light-bg) !important;
+    font-size: 0.875rem;
+    line-height: 1.7;
+  }
+
+  .static-code-block:has(.static-code-block__title) .shiki {
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  [data-theme="astro-blog-dark"] .static-code-block .shiki {
+    background: var(--shiki-dark-bg) !important;
+  }
+
+  .static-code-block .line {
+    display: inline-block;
+    min-width: 100%;
+    padding: 0 1.95rem;
+  }
+
+  .static-code-block[data-line-numbers] .line {
+    padding-left: 0.75rem;
+  }
+
+  .static-code-block[data-line-numbers] .line::before {
+    content: attr(data-line);
+    display: inline-block;
+    width: 2.75rem;
+    margin-right: 1rem;
+    color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+    text-align: right;
+    user-select: none;
+  }
+
+  .static-code-block .line.highlighted {
+    background: color-mix(in oklab, var(--color-primary) 14%, transparent);
+    box-shadow: inset 3px 0 var(--color-primary);
+  }
+
+  .static-code-block .shiki span {
+    color: var(--shiki-light);
+  }
+
+  [data-theme="astro-blog-dark"] .static-code-block .shiki span {
+    color: var(--shiki-dark);
+  }
+
+  .static-code-block__copy {
+    position: absolute;
+    z-index: 2;
+    top: 0.55rem;
+    right: 0.65rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: 0.35rem;
+    padding: 0.25rem 0.55rem;
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    font: 600 0.75rem/1.2 var(--font-sans);
+    cursor: pointer;
+  }
+
+  .static-code-block__godbolt {
+    display: block;
+    width: fit-content;
+    margin: -1.35rem 0 2rem auto;
+    font-size: 0.8rem;
+  }
+</style>

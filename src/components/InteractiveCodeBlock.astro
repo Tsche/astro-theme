@@ -1,0 +1,199 @@
+---
+import "@cppsocial/codeblocks-hosted/styles.css";
+
+interface Props {
+  code?: string;
+  src?: string;
+  range?: string;
+  highlightLines?: string;
+  language?: string;
+  compiler?: string;
+  compilerArgs?: string;
+  runArgs?: string;
+  stdin?: string;
+  outputViews?: string;
+  outputPosition?: "below" | "side" | "custom";
+  readonly?: boolean;
+  simple?: boolean;
+  live?: boolean | number;
+  fit?: boolean | "height" | "width";
+  copy?: boolean;
+  compilerExplorerLink?: string;
+  height?: string;
+  minHeight?: string;
+  isolationWorker?: boolean | string;
+  class?: string;
+}
+
+const {
+  code = "",
+  src,
+  range,
+  highlightLines,
+  language = "c++",
+  compiler = "clang2110",
+  compilerArgs = "-std=c++2c -Wall -Wextra -pedantic-errors",
+  runArgs,
+  stdin,
+  outputViews,
+  outputPosition,
+  readonly = false,
+  simple = false,
+  live,
+  fit,
+  copy = false,
+  compilerExplorerLink,
+  height,
+  minHeight,
+  isolationWorker,
+  class: className,
+} = Astro.props;
+
+const isolationWorkerUrl =
+  isolationWorker === true
+    ? `${import.meta.env.BASE_URL}codeblocks-coi-serviceworker.js`
+    : isolationWorker || undefined;
+
+const attributes = {
+  src,
+  range,
+  "highlight-lines": highlightLines,
+  language,
+  compiler,
+  "compiler-args": compilerArgs,
+  "run-args": runArgs,
+  stdin,
+  "output-views": outputViews,
+  "output-position": outputPosition,
+  readonly: readonly || undefined,
+  simple: simple || undefined,
+  live:
+    live === true ? "" : typeof live === "number" ? String(live) : undefined,
+  fit: fit === true ? "" : fit || undefined,
+  "compiler-explorer-link": compilerExplorerLink,
+  height,
+  "min-height": minHeight,
+};
+---
+
+<div
+  class:list={["interactive-code-block", className]}
+  data-interactive-code-block
+  data-isolation-worker={isolationWorkerUrl}
+>
+  {
+    copy && (
+      <button
+        type="button"
+        class="interactive-code-block__copy"
+        data-codeblocks-copy
+      >
+        Copy
+      </button>
+    )
+  }
+  <codeblock {...attributes}>{code}</codeblock>
+</div>
+
+<script>
+  import {
+    configureCodeBlocks,
+    getCodeBlock,
+    setCodeBlocksTheme,
+    startCodeBlocks,
+  } from "@cppsocial/codeblocks-hosted";
+
+  async function prepareIsolation(): Promise<boolean> {
+    const host = document.querySelector<HTMLElement>(
+      "[data-interactive-code-block][data-isolation-worker]",
+    );
+    const worker = host?.dataset.isolationWorker;
+    if (!worker || globalThis.crossOriginIsolated) return true;
+    if (!("serviceWorker" in navigator)) return true;
+    await navigator.serviceWorker.register(worker, { scope: "./" });
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) {
+      location.reload();
+      return false;
+    }
+    return true;
+  }
+
+  function currentTheme(): "light" | "dark" {
+    return document.documentElement.dataset.theme === "astro-blog-dark"
+      ? "dark"
+      : "light";
+  }
+
+  async function initializeCodeBlocks() {
+    if (!(await prepareIsolation())) return;
+    configureCodeBlocks({ theme: currentTheme() });
+    startCodeBlocks();
+    setCodeBlocksTheme(currentTheme());
+
+    new MutationObserver(() => setCodeBlocksTheme(currentTheme())).observe(
+      document.documentElement,
+      { attributes: true, attributeFilter: ["data-theme"] },
+    );
+
+    document
+      .querySelectorAll<HTMLElement>("[data-codeblocks-copy]")
+      .forEach((button) => {
+        if (button.dataset.ready) return;
+        button.dataset.ready = "true";
+        button.addEventListener("click", async () => {
+          const element = button
+            .closest("[data-interactive-code-block]")
+            ?.querySelector("codeblock");
+          if (!element) return;
+          const block = getCodeBlock(element);
+          if (!block) return;
+          await block.sourceReady;
+          await navigator.clipboard.writeText(block.getValue());
+          button.textContent = "Copied";
+          setTimeout(() => (button.textContent = "Copy"), 1500);
+        });
+      });
+
+    window.dispatchEvent(
+      new CustomEvent("astro-codeblocks:ready", {
+        detail: { getCodeBlock },
+      }),
+    );
+  }
+
+  initializeCodeBlocks().catch((error) =>
+    console.error("Unable to initialize interactive code blocks", error),
+  );
+</script>
+
+<style>
+  .interactive-code-block {
+    position: relative;
+    margin: 2rem 0;
+  }
+
+  .interactive-code-block codeblock {
+    width: 100%;
+    --codeblocks-accent: var(--color-primary);
+    --codeblocks-border: var(--color-base-300);
+    --codeblocks-background: var(--color-base-100);
+    --codeblocks-panel: var(--color-base-200);
+    --codeblocks-foreground: var(--color-base-content);
+    --codeblocks-link: var(--color-primary);
+  }
+
+  .interactive-code-block__copy {
+    position: absolute;
+    z-index: 5;
+    top: 0.55rem;
+    right: 0.65rem;
+    border: 1px solid var(--color-base-300);
+    border-radius: 0.35rem;
+    padding: 0.25rem 0.55rem;
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    font: 600 0.75rem/1.2 var(--font-sans);
+    cursor: pointer;
+  }
+</style>

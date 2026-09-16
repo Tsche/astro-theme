@@ -1,0 +1,291 @@
+---
+import { render } from "astro:content";
+import { Icon } from "astro-icon/components";
+import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
+import PostList from "@tsche/astro-blog-theme/components/PostList.astro";
+import Pagination from "@tsche/astro-blog-theme/components/Pagination.astro";
+import { formatDate, isoDate, sitePath } from "@tsche/astro-blog-theme/site";
+import { SITE } from "@astro-theme-site/config";
+import {
+  collectionFilterPath,
+  categoryPath,
+  contentType,
+  enabledContentTypes,
+  getPosts,
+  hasDistinctAuthors,
+  hasDistinctCategories,
+  overviewTags,
+  postAuthors,
+  postPath,
+  sortPostsByDate,
+  type ContentType,
+  type Post,
+} from "@tsche/astro-blog-theme/posts";
+
+export function getStaticPaths() {
+  return enabledContentTypes.map((type) => ({
+    params: { type },
+    props: { type },
+  }));
+}
+
+const { type, currentPage = 1 } = Astro.props as {
+  type: ContentType;
+  currentPage?: number;
+};
+const typeConfig = SITE.contentTypes[type]!;
+const posts = (await getPosts()).filter((post) => contentType(post) === type);
+const pageSize = typeConfig.postsPerPage ?? SITE.postsPerPage;
+const lastPage = Math.max(1, Math.ceil(posts.length / pageSize));
+const pagePosts = posts.slice(
+  (currentPage - 1) * pageSize,
+  currentPage * pageSize,
+);
+const showAuthors = hasDistinctAuthors(posts);
+const showCategories = hasDistinctCategories(posts);
+const renderedTips =
+  type === "tips"
+    ? await Promise.all(
+        pagePosts.map(async (post) => ({
+          post,
+          Content: (await render(post)).Content,
+        })),
+      )
+    : [];
+const updateDays =
+  type === "updates"
+    ? Map.groupBy(sortPostsByDate(pagePosts), (post) =>
+        formatDate(post.data.pubDate),
+      )
+    : new Map<string, Post[]>();
+const filterAttributes = (post: Post) => ({
+  "data-filter-item": true,
+  "data-filter-date": isoDate(post.data.pubDate).slice(0, 10),
+  "data-filter-authors": JSON.stringify(
+    postAuthors(post).map(({ name }) => name),
+  ),
+  "data-filter-tags": JSON.stringify(post.data.tags),
+});
+const hrefForPage = (page: number) =>
+  sitePath(page === 1 ? `/${type}/` : `/${type}/page/${page}/`);
+---
+
+<BaseLayout
+  title={`${typeConfig.label}${currentPage > 1 ? ` — Page ${currentPage}` : ""}`}
+  description={typeConfig.description}
+>
+  <header class="collection-header" data-content-type={type}>
+    <span class="collection-header__icon" aria-hidden="true"
+      >{type === "tips" ? "//" : type === "articles" ? "{}" : "++"}</span
+    >
+    <p class="eyebrow">
+      {typeConfig.eyebrow}
+    </p>
+    <h1>{typeConfig.label}</h1>
+    <p class="text-base-content/70 mt-2">{typeConfig.description}</p>
+  </header>
+
+  <div class="collection-filter" data-filter-status hidden>
+    <span
+      >Showing <strong data-filter-kind></strong>: <strong data-filter-value
+      ></strong></span
+    >
+    <a href={sitePath(`/${type}/`)}>Clear filter</a>
+  </div>
+
+  {
+    type === "tips" ? (
+      <div class="tip-feed collection-feed">
+        {renderedTips.map(({ post, Content }, index) => {
+          const authors = postAuthors(post);
+          const date = isoDate(post.data.pubDate).slice(0, 10);
+          return (
+            <article class="tip-feed__item" {...filterAttributes(post)}>
+              <span class="tip-feed__index">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <div>
+                <h2>
+                  <a class="tip-feed__link" href={postPath(post)}>
+                    {post.data.title}
+                  </a>
+                </h2>
+                <div class="feed-metadata">
+                  {showAuthors && (
+                    <span>
+                      By{" "}
+                      {authors.map((author, i) => (
+                        <>
+                          {i > 0 && ", "}
+                          <a
+                            href={collectionFilterPath(
+                              type,
+                              "author",
+                              author.name,
+                            )}
+                          >
+                            {author.name}
+                          </a>
+                        </>
+                      ))}
+                    </span>
+                  )}
+                  <a href={collectionFilterPath(type, "date", date)}>
+                    <time datetime={isoDate(post.data.pubDate)}>
+                      {formatDate(post.data.pubDate)}
+                    </time>
+                  </a>
+                  {showCategories &&
+                    post.data.categories.map((category) => (
+                      <a href={categoryPath(category)}>{category}</a>
+                    ))}
+                  {overviewTags(post).map((tag) => (
+                    <a
+                      class="feed-tag"
+                      href={collectionFilterPath(type, "tag", tag)}
+                    >
+                      #{tag}
+                    </a>
+                  ))}
+                </div>
+                <div class="tip-feed__body prose-site">
+                  <Content />
+                </div>
+              </div>
+              <span class="tip-feed__permalink" aria-hidden="true">
+                <Icon name="lucide:arrow-up-right" width={17} height={17} />
+              </span>
+            </article>
+          );
+        })}
+      </div>
+    ) : type === "updates" ? (
+      <ol class="update-feed collection-feed">
+        {Array.from(updateDays, ([dateLabel, dayPosts]) => (
+          <li class="update-feed__day" data-filter-group>
+            <h2 class="update-feed__date">
+              <a
+                href={collectionFilterPath(
+                  type,
+                  "date",
+                  isoDate(dayPosts[0].data.pubDate).slice(0, 10),
+                )}
+              >
+                <time datetime={isoDate(dayPosts[0].data.pubDate)}>
+                  {dateLabel}
+                </time>
+              </a>
+            </h2>
+            <ol class="update-feed__posts">
+              {dayPosts.map((post) => {
+                const authors = postAuthors(post);
+                return (
+                  <li {...filterAttributes(post)}>
+                    <div class="update-feed__entry">
+                      <h3>
+                        <a class="update-feed__title" href={postPath(post)}>
+                          {post.data.title}
+                        </a>
+                      </h3>
+                      <p>{post.data.description}</p>
+                      <div class="feed-metadata">
+                        {showAuthors && (
+                          <span>
+                            By{" "}
+                            {authors.map((author, i) => (
+                              <>
+                                {i > 0 && ", "}
+                                <a
+                                  href={collectionFilterPath(
+                                    type,
+                                    "author",
+                                    author.name,
+                                  )}
+                                >
+                                  {author.name}
+                                </a>
+                              </>
+                            ))}
+                          </span>
+                        )}
+                        {showCategories &&
+                          post.data.categories.map((category) => (
+                            <a href={categoryPath(category)}>{category}</a>
+                          ))}
+                        {overviewTags(post).map((tag) => (
+                          <a
+                            class="feed-tag"
+                            href={collectionFilterPath(type, "tag", tag)}
+                          >
+                            #{tag}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </li>
+        ))}
+      </ol>
+    ) : (
+      <PostList posts={pagePosts} />
+    )
+  }
+
+  <Pagination
+    currentPage={currentPage}
+    lastPage={lastPage}
+    hrefForPage={hrefForPage}
+  />
+
+  <p class="feed-empty" data-filter-empty hidden>
+    No entries match this filter.
+  </p>
+</BaseLayout>
+
+<script>
+  function setupCollectionFilter() {
+    const params = new URLSearchParams(window.location.search);
+    const active = (["tag", "date", "author"] as const)
+      .map((kind) => ({ kind, value: params.get(kind) }))
+      .find(({ value }) => value);
+    const items = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-filter-item]"),
+    );
+    const status = document.querySelector<HTMLElement>("[data-filter-status]");
+    const empty = document.querySelector<HTMLElement>("[data-filter-empty]");
+    if (!active || !status || items.length === 0) return;
+
+    let visible = 0;
+    for (const item of items) {
+      let matches = false;
+      if (active.kind === "date")
+        matches = item.dataset.filterDate === active.value;
+      else {
+        const values = JSON.parse(
+          active.kind === "tag"
+            ? item.dataset.filterTags || "[]"
+            : item.dataset.filterAuthors || "[]",
+        ) as string[];
+        matches = values.includes(active.value!);
+      }
+      item.hidden = !matches;
+      if (matches) visible++;
+    }
+    document
+      .querySelectorAll<HTMLElement>("[data-filter-group]")
+      .forEach((group) => {
+        group.hidden = !group.querySelector("[data-filter-item]:not([hidden])");
+      });
+    status.hidden = false;
+    const kind = status.querySelector<HTMLElement>("[data-filter-kind]");
+    const value = status.querySelector<HTMLElement>("[data-filter-value]");
+    if (kind) kind.textContent = active.kind;
+    if (value) value.textContent = active.value;
+    if (empty) empty.hidden = visible !== 0;
+  }
+  setupCollectionFilter();
+  document.addEventListener("astro:page-load", setupCollectionFilter);
+</script>

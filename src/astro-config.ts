@@ -203,9 +203,10 @@ export function defineBlogConfig(siteConfig: SiteConfig) {
 
     integrations: [
       astroBlogTheme(),
-      // Astro-Icon tree-shakes the installed Iconify collections. Site-owned
-      // SVG brand assets are also available as local icons when needed.
-      icon({ iconDir: "assets/images/site" }),
+      // Astro-Icon tree-shakes the installed Iconify collections. Branding and
+      // OG artwork are imported as image assets, so they must not be parsed as
+      // Iconify icons (complex SVGs may contain text or repeated local IDs).
+      icon(),
       // Expressive Code provides syntax highlighting (Shiki under the hood)
       // plus extra features: code-block frames + titles, copy button, line
       // markers, diffs, word wrap, collapsible sections.

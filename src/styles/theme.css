@@ -2193,7 +2193,8 @@ body {
   max-width: none;
 }
 .post-entry--updates .post-hero {
-  max-width: 37.5rem;
+  max-width: 28rem;
+  margin-left: 0;
 }
 .post-entry--articles .post-title {
   max-width: 16ch;

@@ -20,13 +20,13 @@ import { satteriBaseLinks } from "./markdown/satteri-base-links";
 import { satteriAutolinkHeadings } from "./markdown/satteri-autolink-headings";
 import type { SiteConfig } from "./config";
 
-const copyOptInPlugin = definePlugin({
+export const copyOptInPlugin = definePlugin({
   name: "copy-button-opt-in",
   hooks: {
     postprocessRenderedBlockGroup({ renderedGroupContents, renderData }) {
       if (
-        !renderedGroupContents.some(({ block }) =>
-          block.metaOptions.getBoolean("copy"),
+        !renderedGroupContents.some(({ codeBlock }) =>
+          codeBlock.metaOptions.getBoolean("copy"),
         )
       )
         return;

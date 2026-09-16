@@ -75,7 +75,6 @@ const recentPosts = await Promise.all(
         image: heroImage(post),
         hasImage: shouldShowHero(post),
         PreviewContent: (await render(post)).Content,
-        useFormattedPreview: type !== "articles",
         authors: postAuthors(post)
           .map((author) => author.name)
           .join(", "),
@@ -146,15 +145,7 @@ const tipEntries = await Promise.all(
           <div class="recent-reel__slides" aria-live="off">
             {recentPosts.map(
               (
-                {
-                  post,
-                  type,
-                  image,
-                  hasImage,
-                  PreviewContent,
-                  useFormattedPreview,
-                  authors,
-                },
+                { post, type, image, hasImage, PreviewContent, authors },
                 index,
               ) => (
                 <article
@@ -197,15 +188,12 @@ const tipEntries = await Promise.all(
                         </time>
                       </div>
                     </div>
-                    {useFormattedPreview ? (
-                      <div class="latest-story__preview latest-story__preview--formatted prose-site">
-                        <PreviewContent />
-                      </div>
-                    ) : (
-                      <p class="latest-story__preview latest-story__description">
-                        {post.data.description}
-                      </p>
-                    )}
+                    <div
+                      class="latest-story__preview latest-story__preview--formatted prose-site"
+                      data-reel-preview
+                    >
+                      <PreviewContent />
+                    </div>
                     <a href={postPath(post)} class="latest-story__read">
                       Read{" "}
                       {SITE.contentTypes[
@@ -239,30 +227,24 @@ const tipEntries = await Promise.all(
           <p class="sr-only" data-reel-status />
         </div>
         <nav class="showcase-counts" aria-label="Browse all posts by type">
-          {
-            tipsConfig && (
-              <a href={sitePath("/tips")}>
-                <span>{String(tips.length).padStart(2, "0")}</span>{" "}
-                {tipsConfig.label}
-              </a>
-            )
-          }
-          {
-            articlesConfig && (
-              <a href={sitePath("/articles")}>
-                <span>{String(articles.length).padStart(2, "0")}</span>{" "}
-                {articlesConfig.label}
-              </a>
-            )
-          }
-          {
-            updatesConfig && (
-              <a href={sitePath("/updates")}>
-                <span>{String(updates.length).padStart(2, "0")}</span>{" "}
-                {updatesConfig.label}
-              </a>
-            )
-          }
+          {tipsConfig && (
+            <a href={sitePath("/tips")}>
+              <span>{String(tips.length).padStart(2, "0")}</span>{" "}
+              {tipsConfig.label}
+            </a>
+          )}
+          {articlesConfig && (
+            <a href={sitePath("/articles")}>
+              <span>{String(articles.length).padStart(2, "0")}</span>{" "}
+              {articlesConfig.label}
+            </a>
+          )}
+          {updatesConfig && (
+            <a href={sitePath("/updates")}>
+              <span>{String(updates.length).padStart(2, "0")}</span>{" "}
+              {updatesConfig.label}
+            </a>
+          )}
         </nav>
       </section>
     )
@@ -418,6 +400,7 @@ const tipEntries = await Promise.all(
 </BaseLayout>
 
 <script>
+  import { setupReelPreviews } from "../utils/reel-preview";
   function setupRecentReel() {
     document
       .querySelectorAll<HTMLElement>("[data-recent-reel]")
@@ -435,6 +418,8 @@ const tipEntries = await Promise.all(
           ".recent-reel__slides",
         );
         let current = 0;
+
+        setupReelPreviews(reel);
 
         if (slides.length < 2) return;
 

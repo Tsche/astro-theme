@@ -11,7 +11,7 @@
 
 import { glob } from "astro/loaders";
 import { defineCollection, type SchemaContext } from "astro:content";
-import { z } from "zod";
+import { z } from "astro/zod";
 import { createContentIdGenerator } from "./utils/content-path";
 
 /**

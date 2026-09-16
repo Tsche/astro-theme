@@ -233,7 +233,7 @@ export function defineBlogConfig(siteConfig: SiteConfig) {
           codeFontFamily:
             "'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
           codeFontSize: "0.875rem",
-          codePaddingInline: "1.95rem",
+          codePaddingInline: "0.75rem",
           frames: {
             shadowColor: "transparent",
           },

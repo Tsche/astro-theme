@@ -460,10 +460,10 @@
     @apply border-base-300 mt-10 mb-4 border-b pb-2 text-2xl;
   }
   .prose-site h3 {
-    @apply mt-8 mb-3 text-xl;
+    @apply mt-8 mb-3 text-2xl;
   }
   .prose-site h4 {
-    @apply mt-6 mb-2 text-lg;
+    @apply mt-6 mb-2 text-xl;
   }
   .prose-site p {
     @apply my-4;
@@ -675,9 +675,6 @@
   }
   .prose-site .expressive-code pre {
     @apply bg-transparent p-0;
-  }
-  .prose-site .expressive-code .ec-line .code {
-    margin-inline-start: 0.25rem;
   }
   .prose-site .expressive-code:not(.code-copy-enabled) .copy {
     display: none;

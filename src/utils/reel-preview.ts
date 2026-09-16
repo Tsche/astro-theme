@@ -35,7 +35,13 @@ export function setupReelPreviews(reel: HTMLElement) {
         range.setStart(node, count);
         range.setEnd(preview, preview.childNodes.length);
         range.deleteContents();
-        node.textContent = (node.textContent ?? "").trimEnd() + "…";
+        node.textContent = (node.textContent ?? "").trimEnd() + " ";
+        const more = document.createElement("a");
+        more.href = preview.dataset.reelPreviewHref ?? "#";
+        more.className = "latest-story__ellipsis";
+        more.textContent = "[…]";
+        more.setAttribute("aria-label", "Continue reading this post");
+        node.parentNode?.insertBefore(more, node.nextSibling);
         return;
       }
     }

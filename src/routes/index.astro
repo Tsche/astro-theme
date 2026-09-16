@@ -188,12 +188,19 @@ const tipEntries = await Promise.all(
                         </time>
                       </div>
                     </div>
-                    <div
-                      class="latest-story__preview latest-story__preview--formatted prose-site"
-                      data-reel-preview
-                    >
-                      <PreviewContent />
-                    </div>
+                    {type === "articles" ? (
+                      <p class="latest-story__preview latest-story__description">
+                        {post.data.description}
+                      </p>
+                    ) : (
+                      <div
+                        class="latest-story__preview latest-story__preview--formatted prose-site"
+                        data-reel-preview
+                        data-reel-preview-href={postPath(post)}
+                      >
+                        <PreviewContent />
+                      </div>
+                    )}
                     <a href={postPath(post)} class="latest-story__read">
                       Read{" "}
                       {SITE.contentTypes[

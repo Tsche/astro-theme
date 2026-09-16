@@ -3016,6 +3016,9 @@ body {
   max-height: 9rem;
   margin: 0.7rem 0;
 }
+.latest-story__ellipsis {
+  white-space: nowrap;
+}
 .latest-story__read {
   flex: 0 0 auto;
 }

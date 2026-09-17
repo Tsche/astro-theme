@@ -1,4 +1,4 @@
-import type { ImageMetadata } from "astro";
+import type { ImageMetadata, RedirectConfig } from "astro";
 
 export const CONTENT_TYPES = ["articles", "tips", "updates"] as const;
 export type ContentType = (typeof CONTENT_TYPES)[number];
@@ -56,6 +56,7 @@ export interface SiteConfig {
       respectDoNotTrack?: boolean;
     };
   };
+  redirects?: Record<string, RedirectConfig>;
   url: string;
 }
 

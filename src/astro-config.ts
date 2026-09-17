@@ -131,6 +131,8 @@ export function defineBlogConfig(siteConfig: SiteConfig) {
   // https://astro.build/config
   return defineConfig({
     site: siteConfig.url,
+    redirects: siteConfig.redirects,
+
     // GitHub Pages serves the project at https://<user>.github.io/<repo>/,
     // so production builds need `base` to match that subpath — every
     // generated asset URL (CSS, JS, images, favicons) is prefixed with it.

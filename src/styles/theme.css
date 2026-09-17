@@ -532,20 +532,26 @@
     border: 0;
   }
 
-  /* Hero image — contained within content width, using the sidebar's
-     subtle gradient as a placeholder background. */
+  /* Compact post-header thumbnail. The source image remains available via
+     the wrapping link for readers who want to inspect it at full size. */
   .post-hero {
-    @apply mx-auto;
-    max-width: 100%;
-  }
-  .post-hero__frame {
-    @apply relative overflow-hidden rounded-md;
+    @apply block overflow-hidden rounded-md;
+    width: 100%;
+    max-width: 15rem;
+    height: 11rem;
     background: var(--color-sidebar-to);
   }
   .post-hero__img {
-    @apply block w-full;
-    height: auto;
+    @apply block h-full w-full;
     object-fit: cover;
+    transition: transform 180ms ease;
+  }
+  .post-hero:hover .post-hero__img {
+    transform: scale(1.035);
+  }
+  .post-hero:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
   }
   .prose-site table {
     @apply my-6 w-full border-collapse text-left text-sm;
@@ -2189,10 +2195,6 @@ body {
 .post-entry--updates .post-title {
   max-width: none;
 }
-.post-entry--updates .post-hero {
-  max-width: 28rem;
-  margin-left: 0;
-}
 .post-entry--articles .post-title {
   max-width: 16ch;
 }
@@ -2583,6 +2585,15 @@ body {
   padding: 2rem 0 1.5rem;
   border-bottom: 1px solid var(--color-base-300);
 }
+.post-header.has-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 15rem);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3rem);
+}
+.post-header__copy {
+  min-width: 0;
+}
 .post-entry--tips > header {
   border-bottom: 3px solid var(--tip-color);
 }
@@ -2591,10 +2602,20 @@ body {
   border-left: 0;
   border-bottom: 3px solid var(--update-color);
 }
-.post-entry > header > p {
+.post-entry > header p {
   max-width: 48rem;
   font-size: 1.05rem;
   line-height: 1.5;
+}
+@media (max-width: 700px) {
+  .post-header.has-hero {
+    grid-template-columns: 1fr;
+  }
+  .post-header .post-hero {
+    width: min(100%, 20rem);
+    max-width: none;
+    height: 9rem;
+  }
 }
 .site-footer {
   display: flex;

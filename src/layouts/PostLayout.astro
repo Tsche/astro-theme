@@ -101,99 +101,104 @@ if (post.data.math) {
     class:list={[articleClass, `post-entry post-entry--${type}`]}
     data-content-type={type}
   >
-    <header class="mb-8">
-      <h1
-        class="post-title text-base-content text-3xl leading-tight font-extrabold tracking-tight sm:text-[2.5rem]"
-      >
-        {post.data.title}
-      </h1>
-      <p class="text-base-content/65 mt-3 text-lg">{post.data.description}</p>
-
-      <div
-        class="post-meta text-base-content/70 mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
-      >
-        <a
-          href={sitePath(`/${type}`)}
-          class={`content-label content-label--${type === "articles" ? "article" : type.slice(0, -1)}`}
+    <header
+      class:list={["post-header mb-8", showHero && heroAsset ? "has-hero" : ""]}
+    >
+      <div class="post-header__copy">
+        <h1
+          class="post-title text-base-content text-3xl leading-tight font-extrabold tracking-tight sm:text-[2.5rem]"
         >
-          {typeConfig.singularLabel}
-        </a>
-        <span class="post-byline">
-          <span>By</span>{" "}
-          {
-            authors.map((author, index) => (
-              <>
-                {index > 0 && <span>, </span>}
-                {author.url ? (
-                  <a href={author.url}>{author.name}</a>
-                ) : (
-                  <span>{author.name}</span>
-                )}
-              </>
-            ))
-          }
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <Icon name="lucide:calendar-days" width={14} height={14} />
-          <time datetime={isoDate(post.data.pubDate)}
-            >{formatDate(post.data.pubDate)}</time
-          >
-        </span>
-        {
-          post.data.updatedDate && (
-            <span class="inline-flex items-center gap-1">
-              <Icon name="lucide:check" width={14} height={14} />
-              <time datetime={isoDate(post.data.updatedDate)}>
-                {t("post.updatedOn")} {formatDate(post.data.updatedDate)}
-              </time>
-            </span>
-          )
-        }
-        {
-          post.data.categories.length > 0 && (
-            <span class="inline-flex items-center gap-1">
-              <Icon name="lucide:folder" width={14} height={14} />
-              {post.data.categories.map((c, i) => (
-                <>
-                  {i > 0 && <span class="text-base-content/40 mx-0.5">,</span>}
-                  <a href={categoryPath(c)} class="hover:text-primary">
-                    {c}
-                  </a>
-                </>
-              ))}
-            </span>
-          )
-        }
-        <span class="inline-flex items-center gap-1">
-          <Icon name="lucide:clock" width={14} height={14} />
-          {minutes}
-          {t("post.readingTime")}
-        </span>
-      </div>
-    </header>
+          {post.data.title}
+        </h1>
+        <p class="text-base-content/65 mt-3 text-lg">{post.data.description}</p>
 
-    {
-      showHero && heroAsset && (
-        <figure class="post-hero mb-8">
-          <div class="post-hero__frame">
+        <div
+          class="post-meta text-base-content/70 mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
+        >
+          <a
+            href={sitePath(`/${type}`)}
+            class={`content-label content-label--${type === "articles" ? "article" : type.slice(0, -1)}`}
+          >
+            {typeConfig.singularLabel}
+          </a>
+          <span class="post-byline">
+            <span>By</span>{" "}
+            {
+              authors.map((author, index) => (
+                <>
+                  {index > 0 && <span>, </span>}
+                  {author.url ? (
+                    <a href={author.url}>{author.name}</a>
+                  ) : (
+                    <span>{author.name}</span>
+                  )}
+                </>
+              ))
+            }
+          </span>
+          <span class="inline-flex items-center gap-1">
+            <Icon name="lucide:calendar-days" width={14} height={14} />
+            <time datetime={isoDate(post.data.pubDate)}
+              >{formatDate(post.data.pubDate)}</time
+            >
+          </span>
+          {
+            post.data.updatedDate && (
+              <span class="inline-flex items-center gap-1">
+                <Icon name="lucide:check" width={14} height={14} />
+                <time datetime={isoDate(post.data.updatedDate)}>
+                  {t("post.updatedOn")} {formatDate(post.data.updatedDate)}
+                </time>
+              </span>
+            )
+          }
+          {
+            post.data.categories.length > 0 && (
+              <span class="inline-flex items-center gap-1">
+                <Icon name="lucide:folder" width={14} height={14} />
+                {post.data.categories.map((c, i) => (
+                  <>
+                    {i > 0 && (
+                      <span class="text-base-content/40 mx-0.5">,</span>
+                    )}
+                    <a href={categoryPath(c)} class="hover:text-primary">
+                      {c}
+                    </a>
+                  </>
+                ))}
+              </span>
+            )
+          }
+          <span class="inline-flex items-center gap-1">
+            <Icon name="lucide:clock" width={14} height={14} />
+            {minutes}
+            {t("post.readingTime")}
+          </span>
+        </div>
+      </div>
+
+      {
+        showHero && heroAsset && heroSrc && (
+          <a
+            class="post-hero"
+            href={heroSrc}
+            target="_blank"
+            rel="noopener"
+            aria-label={`View full-size image for ${post.data.title}`}
+          >
             <SmartImage
               src={heroAsset}
               alt={heroAlt}
               class="post-hero__img"
               loading="eager"
-              widths={[480, 768, 1024, 1280, 1600]}
-              sizes="(max-width: 768px) 100vw, 1024px"
-              quality={82}
+              widths={[240, 360, 480]}
+              sizes="(max-width: 700px) 80vw, 15rem"
+              quality={78}
             />
-          </div>
-          {heroAlt && (
-            <figcaption class="text-base-content/70 mt-2 text-center text-xs">
-              {heroAlt}
-            </figcaption>
-          )}
-        </figure>
-      )
-    }
+          </a>
+        )
+      }
+    </header>
 
     <div class="prose-site max-w-none">
       <slot />

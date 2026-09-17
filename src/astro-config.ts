@@ -208,7 +208,9 @@ export function defineBlogConfig(siteConfig: SiteConfig) {
       // Astro-Icon tree-shakes the installed Iconify collections. Branding and
       // OG artwork are imported as image assets, so they must not be parsed as
       // Iconify icons (complex SVGs may contain text or repeated local IDs).
-      icon(),
+      icon({
+        iconDir: fileURLToPath(new URL("../public/icons", import.meta.url)),
+      }),
       // Expressive Code provides syntax highlighting (Shiki under the hood)
       // plus extra features: code-block frames + titles, copy button, line
       // markers, diffs, word wrap, collapsible sections.

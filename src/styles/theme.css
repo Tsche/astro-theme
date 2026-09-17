@@ -2007,10 +2007,43 @@ body {
   margin-bottom: 0;
 }
 .tip-feed__body.prose-site .expressive-code {
-  margin: 1rem 0 0;
+  margin: 0.65rem 0;
 }
-.tip-feed__body.prose-site pre {
-  max-height: 16rem;
+.tip-feed__body.prose-site .expressive-code .ec-line .gutter {
+  padding-left: 0.35rem;
+  padding-right: 0.45rem;
+}
+.tip-feed__body.prose-site .expressive-code .ec-line .code {
+  padding-right: 0.65rem;
+  padding-left: 0.65rem;
+}
+.tip-feed__body--preview {
+  max-height: 20rem;
+  overflow: hidden;
+}
+.feed-section--tips .tip-feed__item {
+  height: 26rem;
+}
+[data-block-preview]:not([data-preview-ready]),
+[data-reel-preview]:not([data-preview-ready]) {
+  visibility: hidden;
+}
+.content-preview__more {
+  position: relative;
+  z-index: 2;
+  display: inline;
+  margin-top: 0.25rem;
+  color: var(--tip-color, var(--ink-blue));
+  font: 700 0.78rem var(--font-mono);
+  white-space: nowrap;
+}
+.content-preview__more:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+:where([data-block-preview], [data-reel-preview])
+  p:has(+ .content-preview__more) {
+  display: inline;
 }
 .tip-feed__link::after {
   position: absolute;
@@ -2607,6 +2640,9 @@ body {
   font-size: 1.05rem;
   line-height: 1.5;
 }
+.post-header:not(.has-hero) .post-title {
+  max-width: none;
+}
 @media (max-width: 700px) {
   .post-header.has-hero {
     grid-template-columns: 1fr;
@@ -3034,10 +3070,9 @@ body {
   font-size: 0.8rem;
 }
 .latest-story__preview--formatted pre {
-  max-height: 9rem;
   margin: 0.7rem 0;
 }
-.latest-story__ellipsis {
+.latest-story__preview--formatted .content-preview__more {
   white-space: nowrap;
 }
 .latest-story__read {

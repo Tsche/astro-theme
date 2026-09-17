@@ -1,5 +1,4 @@
 ---
-import { render } from "astro:content";
 import { Icon } from "astro-icon/components";
 import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
 import SmartImage from "../components/SmartImage.astro";
@@ -16,6 +15,7 @@ import {
   sortPostsByDate,
 } from "../utils/posts";
 import { formatDate, isoDate, sitePath } from "../utils/site";
+import { previewHtml } from "../utils/content-preview";
 
 const posts = await getPosts();
 const articles = posts.filter((post) => contentType(post) === "articles");
@@ -64,31 +64,27 @@ for (const post of showcaseCandidates) {
   reelIds.add(post.id);
 }
 
-const recentPosts = await Promise.all(
-  showcaseCandidates
-    .filter((post) => reelIds.has(post.id))
-    .map(async (post) => {
-      const type = contentType(post);
-      return {
-        post,
-        type,
-        image: heroImage(post),
-        hasImage: shouldShowHero(post),
-        PreviewContent: (await render(post)).Content,
-        authors: postAuthors(post)
-          .map((author) => author.name)
-          .join(", "),
-      };
-    }),
-);
+const recentPosts = showcaseCandidates
+  .filter((post) => reelIds.has(post.id))
+  .map((post) => {
+    const type = contentType(post);
+    return {
+      post,
+      type,
+      image: heroImage(post),
+      hasImage: shouldShowHero(post),
+      preview: previewHtml(post),
+      authors: postAuthors(post)
+        .map((author) => author.name)
+        .join(", "),
+    };
+  });
 const showRecentAuthors = hasDistinctAuthors(
   recentPosts.map(({ post }) => post),
 );
-const tipEntries = await Promise.all(
-  tips
-    .slice(0, TIP_LIMIT)
-    .map(async (post) => ({ post, Content: (await render(post)).Content })),
-);
+const tipEntries = tips
+  .slice(0, TIP_LIMIT)
+  .map((post) => ({ post, preview: previewHtml(post) }));
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description} hidePanel>
@@ -145,7 +141,7 @@ const tipEntries = await Promise.all(
           <div class="recent-reel__slides" aria-live="off">
             {recentPosts.map(
               (
-                { post, type, image, hasImage, PreviewContent, authors },
+                { post, type, image, hasImage, preview, authors },
                 index,
               ) => (
                 <article
@@ -188,7 +184,7 @@ const tipEntries = await Promise.all(
                         </time>
                       </div>
                     </div>
-                    {type === "articles" ? (
+                    {type === "articles" || !preview ? (
                       <p class="latest-story__preview latest-story__description">
                         {post.data.description}
                       </p>
@@ -196,9 +192,17 @@ const tipEntries = await Promise.all(
                       <div
                         class="latest-story__preview latest-story__preview--formatted prose-site"
                         data-reel-preview
-                        data-reel-preview-href={postPath(post)}
                       >
-                        <PreviewContent />
+                        <Fragment set:html={preview.html} />
+                        {preview.hasMore && (
+                          <a
+                            href={postPath(post)}
+                            class="content-preview__more"
+                            aria-label={`Continue reading ${post.data.title}`}
+                          >
+                            […]
+                          </a>
+                        )}
                       </div>
                     )}
                     <a href={postPath(post)} class="latest-story__read">
@@ -273,7 +277,7 @@ const tipEntries = await Promise.all(
             </div>
           </header>
           <div class="tip-feed">
-            {tipEntries.map(({ post, Content }, index) => (
+            {tipEntries.map(({ post, preview }, index) => (
               <article class="tip-feed__item">
                 <span class="tip-feed__index">
                   {String(index + 1).padStart(2, "0")}
@@ -284,8 +288,22 @@ const tipEntries = await Promise.all(
                       {post.data.title}
                     </a>
                   </h3>
-                  <div class="tip-feed__body prose-site">
-                    <Content />
+                  <div
+                    class="tip-feed__body tip-feed__body--preview prose-site"
+                    data-block-preview
+                  >
+                    {preview ? (
+                      <Fragment set:html={preview.html} />
+                    ) : (
+                      <p>{post.data.description}</p>
+                    )}
+                    <a
+                      href={postPath(post)}
+                      class="content-preview__more"
+                      aria-label={`Continue reading ${post.data.title}`}
+                    >
+                      Read more <span aria-hidden="true">→</span>
+                    </a>
                   </div>
                 </div>
                 <span class="tip-feed__permalink" aria-hidden="true">
@@ -409,6 +427,7 @@ const tipEntries = await Promise.all(
 <script>
   import { setupReelPreviews } from "../utils/reel-preview";
   function setupRecentReel() {
+    setupReelPreviews(document);
     document
       .querySelectorAll<HTMLElement>("[data-recent-reel]")
       .forEach((reel) => {
@@ -425,8 +444,6 @@ const tipEntries = await Promise.all(
           ".recent-reel__slides",
         );
         let current = 0;
-
-        setupReelPreviews(reel);
 
         if (slides.length < 2) return;
 

@@ -216,6 +216,7 @@ export function defineBlogConfig(siteConfig: SiteConfig) {
       // markers, diffs, word wrap, collapsible sections.
       // https://expressive-code.com/
       expressiveCode({
+        emitExternalStylesheet: false,
         themes: ["github-light", "github-dark-dimmed"],
         plugins: [pluginLineNumbers(), copyOptInPlugin],
         defaultProps: {

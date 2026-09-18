@@ -7,7 +7,6 @@ import Footer from "@tsche/astro-blog-theme/components/Footer.astro";
 import SEO from "@tsche/astro-blog-theme/components/SEO.astro";
 import BackToTop from "@tsche/astro-blog-theme/components/BackToTop.astro";
 import SiteDecoration from "@astro-theme-site/components/SiteDecoration.astro";
-import { ClientRouter } from "astro:transitions";
 import { SITE, SITE_IMAGES } from "@astro-theme-site/config";
 import { t } from "@tsche/astro-blog-theme/ui";
 import { withBase } from "@tsche/astro-blog-theme/site";
@@ -86,7 +85,6 @@ const umamiEnabled = Boolean(umami?.websiteId);
     {/* Custom fonts configured via Astro Fonts API */}
     <Font cssVariable="--font-source-sans-3" />
     <Font cssVariable="--font-jetbrains-mono" preload />
-    <ClientRouter />
     {
       umamiEnabled && (
         <script

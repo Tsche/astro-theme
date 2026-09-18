@@ -2009,10 +2009,6 @@ body {
 .tip-feed__body.prose-site .expressive-code {
   margin: 0.65rem 0;
 }
-.tip-feed__body.prose-site .expressive-code .ec-line .gutter {
-  padding-left: 0.35rem;
-  padding-right: 0.45rem;
-}
 .tip-feed__body.prose-site .expressive-code .ec-line .code {
   padding-right: 0.65rem;
   padding-left: 0.65rem;
@@ -2020,9 +2016,6 @@ body {
 .tip-feed__body--preview {
   max-height: 20rem;
   overflow: hidden;
-}
-.feed-section--tips .tip-feed__item {
-  height: 26rem;
 }
 [data-block-preview]:not([data-preview-ready]),
 [data-reel-preview]:not([data-preview-ready]) {
@@ -2213,7 +2206,7 @@ body {
   border-bottom: 3px solid var(--tip-color);
 }
 .post-entry--tips .post-title {
-  max-width: 17ch;
+  max-width: none;
   font-size: clamp(2.4rem, 5vw, 4rem) !important;
 }
 .post-entry--tips .prose-site > p:first-child {
@@ -2229,7 +2222,7 @@ body {
   max-width: none;
 }
 .post-entry--articles .post-title {
-  max-width: 16ch;
+  max-width: none;
 }
 .contributor-note {
   display: grid;

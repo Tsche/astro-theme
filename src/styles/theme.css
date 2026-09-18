@@ -539,7 +539,11 @@
     width: 100%;
     max-width: 15rem;
     height: 11rem;
+    border: 0;
+    padding: 0;
     background: var(--color-sidebar-to);
+    text-align: left;
+    cursor: zoom-in;
   }
   .post-hero__img {
     @apply block h-full w-full;
@@ -552,6 +556,44 @@
   .post-hero:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 3px;
+  }
+  .post-image-dialog {
+    width: min(92vw, 1200px);
+    max-width: none;
+    max-height: 92vh;
+    border: 1px solid var(--color-base-300);
+    padding: 0;
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+  }
+  .post-image-dialog::backdrop {
+    background: color-mix(in oklab, var(--color-base-content) 72%, transparent);
+  }
+  .post-image-dialog__frame {
+    position: relative;
+    display: grid;
+    place-items: center;
+    max-height: 92vh;
+    padding: 2.5rem 1rem 1rem;
+  }
+  .post-image-dialog__image {
+    display: block;
+    max-width: 100%;
+    max-height: calc(92vh - 3.5rem);
+    object-fit: contain;
+  }
+  .post-image-dialog__close {
+    position: absolute;
+    top: 0.65rem;
+    right: 0.65rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--color-base-300);
+    border-radius: 999px;
+    padding: 0.35rem;
+    background: var(--color-base-200);
+    color: var(--color-base-content);
+    cursor: pointer;
   }
   .prose-site table {
     @apply my-6 w-full border-collapse text-left text-sm;

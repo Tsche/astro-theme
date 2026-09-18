@@ -178,13 +178,12 @@ if (post.data.math) {
       </div>
 
       {
-        showHero && heroAsset && heroSrc && (
-          <a
+        showHero && heroAsset && (
+          <button
+            type="button"
             class="post-hero"
-            href={heroSrc}
-            target="_blank"
-            rel="noopener"
-            aria-label={`View full-size image for ${post.data.title}`}
+            data-image-preview-trigger
+            aria-label={`Preview image for ${post.data.title}`}
           >
             <SmartImage
               src={heroAsset}
@@ -195,7 +194,7 @@ if (post.data.math) {
               sizes="(max-width: 700px) 80vw, 15rem"
               quality={78}
             />
-          </a>
+          </button>
         )
       }
     </header>
@@ -233,4 +232,55 @@ if (post.data.math) {
 
     <PostNav prev={prev} next={next} />
   </article>
+
+  {
+    showHero && heroAsset && (
+      <dialog class="post-image-dialog" data-image-preview>
+        <div class="post-image-dialog__frame">
+          <button
+            type="button"
+            class="post-image-dialog__close"
+            data-image-preview-close
+            aria-label="Close image preview"
+          >
+            <Icon name="lucide:x" width={20} height={20} />
+          </button>
+          <SmartImage
+            src={heroAsset}
+            alt={heroAlt}
+            class="post-image-dialog__image"
+            widths={[640, 960, 1280, 1600]}
+            sizes="(max-width: 900px) 92vw, 88vw"
+            quality={90}
+          />
+        </div>
+      </dialog>
+    )
+  }
 </BaseLayout>
+
+<script>
+  function setupImagePreview() {
+    document
+      .querySelectorAll<HTMLButtonElement>("[data-image-preview-trigger]")
+      .forEach((trigger) => {
+        if (trigger.dataset.ready) return;
+        trigger.dataset.ready = "true";
+        const dialog = trigger
+          .closest("main")
+          ?.querySelector<HTMLDialogElement>("[data-image-preview]");
+        const close = dialog?.querySelector<HTMLButtonElement>(
+          "[data-image-preview-close]",
+        );
+        if (!dialog || !close) return;
+        trigger.addEventListener("click", () => dialog.showModal());
+        close.addEventListener("click", () => dialog.close());
+        dialog.addEventListener("click", (event) => {
+          if (event.target === dialog) dialog.close();
+        });
+      });
+  }
+  setupImagePreview();
+  document.addEventListener("astro:page-load", setupImagePreview);
+</script>
+

@@ -184,7 +184,7 @@ const tipEntries = tips
                         </time>
                       </div>
                     </div>
-                    {type === "articles" || !preview ? (
+                    {SITE.contentTypes[type]?.preview !== "excerpt" || !preview ? (
                       <p class="latest-story__preview latest-story__description">
                         {post.data.description}
                       </p>
@@ -292,7 +292,7 @@ const tipEntries = tips
                     class="tip-feed__body tip-feed__body--preview prose-site"
                     data-block-preview
                   >
-                    {preview ? (
+                    {tipsConfig?.preview === "excerpt" && preview ? (
                       <Fragment set:html={preview.html} />
                     ) : (
                       <p>{post.data.description}</p>

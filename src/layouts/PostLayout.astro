@@ -92,7 +92,15 @@ if (post.data.math) {
   hidePanel={!showToc}
 >
   {post.data.math && MathStylesComponent && <MathStylesComponent />}
-  {showToc && <TableOfContents slot="aside-bottom" headings={headings} />}
+  {
+    showToc && (
+      <TableOfContents
+        slot="aside-bottom"
+        title={post.data.title}
+        headings={headings}
+      />
+    )
+  }
 
   <article
     class:list={[articleClass, `post-entry post-entry--${type}`]}
@@ -180,7 +188,9 @@ if (post.data.math) {
                 {post.data.outdatedLink && (
                   <>
                     {" "}
-                    <a href={post.data.outdatedLink}>Read the updated article.</a>
+                    <a href={post.data.outdatedLink}>
+                      Read the updated article.
+                    </a>
                   </>
                 )}
               </p>

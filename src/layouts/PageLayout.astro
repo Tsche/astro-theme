@@ -47,7 +47,7 @@ const articleClass = SITE.boxedArticles
   {math && MathStylesComponent && <MathStylesComponent />}
   {
     toc && headings.length > 0 && (
-      <TableOfContents slot="aside-bottom" headings={headings} />
+      <TableOfContents slot="aside-bottom" title={title} headings={headings} />
     )
   }
   <article class={articleClass}>

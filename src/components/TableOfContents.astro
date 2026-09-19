@@ -16,10 +16,11 @@ import { t } from "../ui";
 import type { MarkdownHeading } from "astro";
 
 interface Props {
+  title: string;
   headings: MarkdownHeading[];
 }
 
-const { headings } = Astro.props;
+const { title, headings } = Astro.props;
 const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
 
 // Pre-compute the "parent H2" slug for every item. For depth=2 it is the
@@ -45,6 +46,9 @@ const decorated = items.map((h) => {
         {t("post.toc")}
       </h2>
       <ol class="toc-list space-y-1">
+        <li class="toc-root">
+          <a href="#main">{title}</a>
+        </li>
         {decorated.map((h) => (
           <li class={`toc-level-${h.depth}`} data-toc-parent={h.parent}>
             <a

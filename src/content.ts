@@ -64,6 +64,9 @@ export const baseFrontmatter = ({ image }: SchemaContext) =>
     highlighted: z.boolean().default(false),
     /** Control whether this post appears in the homepage recent-post reel. */
     showcase: z.enum(["auto", "hide", "feature"]).default("auto"),
+    /** Explain why this post is outdated and optionally link to its replacement. */
+    outdated: z.string().min(1).optional(),
+    outdatedLink: z.string().min(1).optional(),
     /**
      * Opt in to LaTeX math rendering (KaTeX). When `true`, the layout
      * loads `katex.min.css` only on this page so the stylesheet stays

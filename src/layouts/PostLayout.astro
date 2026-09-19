@@ -172,6 +172,21 @@ if (post.data.math) {
             {t("post.readingTime")}
           </span>
         </div>
+        {
+          post.data.outdated && (
+            <aside class="callout callout-warning mt-5" role="note">
+              <p>
+                This article is outdated: {post.data.outdated}
+                {post.data.outdatedLink && (
+                  <>
+                    {" "}
+                    <a href={post.data.outdatedLink}>Read the updated article.</a>
+                  </>
+                )}
+              </p>
+            </aside>
+          )
+        }
       </div>
 
       {

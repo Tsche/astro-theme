@@ -10,8 +10,6 @@ export interface ContentTypeConfig {
   singularLabel: string;
   /** Site-owned description used in collection metadata and headers. */
   description: string;
-  /** Short descriptor displayed above a collection heading. */
-  eyebrow: string;
   /** Select the homepage preview source for this content type. */
   preview?: "description" | "excerpt";
   /** Maximum number of entries from this type shown on the landing page. */

@@ -14,7 +14,6 @@ declare module "@cppsocial/codeblocks-hosted" {
 interface ImportMetaEnv {
   readonly CI_SKIP_CONTENT_COLLECTIONS?: string;
   readonly CI_SKIP_RSS_SITEMAP?: string;
-  readonly PUBLIC_UMAMI_WEBSITE_ID?: string;
 }
 
 interface ImportMeta {

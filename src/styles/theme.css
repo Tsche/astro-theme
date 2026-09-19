@@ -1209,21 +1209,6 @@ body {
   position: sticky;
   top: 7rem;
 }
-.eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0 0 0.7rem;
-  color: var(--ink-blue);
-  font: 700 0.72rem/1.2 var(--font-mono);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-.eyebrow > span {
-  width: 1.5rem;
-  height: 2px;
-  background: currentColor;
-}
 .home-hero {
   min-height: min(44rem, calc(100vh - 5rem));
   display: grid;
@@ -1717,9 +1702,6 @@ body {
 }
 .collection-header[data-content-type="updates"] {
   --collection-color: var(--update-color);
-}
-.collection-header .eyebrow {
-  color: var(--collection-color);
 }
 .site-card {
   position: relative;

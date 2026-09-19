@@ -147,10 +147,7 @@ const hrefForPage = (page: number) =>
                     </a>
                   ))}
                 </div>
-                <div
-                  class="tip-feed__body tip-feed__body--preview prose-site"
-                  data-block-preview
-                >
+                <div class="tip-feed__body prose-site">
                   {previewMode === "excerpt" && preview ? (
                     <Fragment set:html={preview.html} />
                   ) : (

@@ -1669,7 +1669,7 @@ body {
 }
 .collection-header {
   position: relative;
-  margin: 2rem 0 2.5rem;
+  margin: 1rem 0 2.5rem;
   padding: clamp(2rem, 5vw, 4rem);
   overflow: hidden;
   border: 1px solid var(--color-base-300);

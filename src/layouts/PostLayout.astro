@@ -38,6 +38,7 @@ const minutes = readingTime(body).minutes;
 const type = contentType(post);
 const typeConfig = SITE.contentTypes[type];
 if (!typeConfig) throw new Error(`Content type "${type}" is not enabled.`);
+const showToc = type === "articles" && headings.length > 0;
 const authors = postAuthors(post);
 
 const commentsEnabled = post.data.comments !== false && GISCUS.enabled;
@@ -88,14 +89,10 @@ if (post.data.math) {
   modifiedTime={post.data.updatedDate}
   tags={post.data.tags}
   seo={seo}
-  hidePanel={!post.data.toc || headings.length === 0}
+  hidePanel={!showToc}
 >
   {post.data.math && MathStylesComponent && <MathStylesComponent />}
-  {
-    post.data.toc && headings.length > 0 && (
-      <TableOfContents slot="aside-bottom" headings={headings} />
-    )
-  }
+  {showToc && <TableOfContents slot="aside-bottom" headings={headings} />}
 
   <article
     class:list={[articleClass, `post-entry post-entry--${type}`]}
@@ -260,10 +257,13 @@ if (post.data.math) {
     const caption = dialog?.querySelector<HTMLElement>(
       "[data-image-preview-caption]",
     );
+    const frame = dialog?.querySelector<HTMLElement>(
+      ".post-image-dialog__frame",
+    );
     const close = dialog?.querySelector<HTMLButtonElement>(
       "[data-image-preview-close]",
     );
-    if (!dialog || !previewImage || !caption || !close) return;
+    if (!dialog || !previewImage || !caption || !frame || !close) return;
 
     document
       .querySelectorAll<HTMLElement>(
@@ -293,8 +293,10 @@ if (post.data.math) {
     if (!dialog.dataset.ready) {
       dialog.dataset.ready = "true";
       close.addEventListener("click", () => dialog.close());
-      dialog.addEventListener("click", (event) => {
-        if (event.target === dialog) dialog.close();
+      frame.addEventListener("click", (event) => {
+        if (event.target !== previewImage && event.target !== close) {
+          dialog.close();
+        }
       });
     }
   }

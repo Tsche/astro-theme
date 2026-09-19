@@ -8,7 +8,12 @@ import { pluginLineNumbers } from "@expressive-code/plugin-line-numbers";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
 import { defineConfig, fontProviders, svgoOptimizer } from "astro/config";
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
@@ -122,6 +127,12 @@ export function defineBlogConfig(siteConfig: SiteConfig) {
               `<?xml-stylesheet type="text/xsl" href="${SITEMAP_XSL_HREF}"?>`,
             );
             if (fixed !== xml) writeFileSync(path, fixed);
+          }
+
+          const indexPath = join(distDir, "sitemap-index.xml");
+          const aliasPath = join(distDir, "sitemap.xml");
+          if (readdirSync(distDir).includes("sitemap-index.xml")) {
+            copyFileSync(indexPath, aliasPath);
           }
         },
       },

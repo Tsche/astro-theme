@@ -123,6 +123,8 @@ const {
     document
       .querySelectorAll<HTMLElement>("[data-theme-toggle]")
       .forEach((btn) => {
+        if (btn.dataset.bound) return;
+        btn.dataset.bound = "true";
         btn.addEventListener("click", (event) => {
           const next: Theme =
             currentTheme() === "astro-blog-dark"
@@ -150,9 +152,6 @@ const {
     });
   }
 
-  // `astro:page-load` fires on initial load AND after each client-side
-  // navigation (DOM is swapped so old listeners are gone). Using only
-  // this event avoids double-binding on first load which would fire two
-  // startViewTransition() calls and cancel the animation.
+  init();
   document.addEventListener("astro:page-load", init);
 </script>

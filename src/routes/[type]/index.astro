@@ -95,7 +95,7 @@ const hrefForPage = (page: number) =>
   {
     type === "tips" ? (
       <div class="tip-feed collection-feed">
-        {renderedTips.map(({ post, Content }, index) => {
+        {tipEntries.map(({ post, preview, previewMode }, index) => {
           const authors = postAuthors(post);
           const date = isoDate(post.data.pubDate).slice(0, 10);
           return (

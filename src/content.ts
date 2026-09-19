@@ -54,6 +54,8 @@ export const baseFrontmatter = ({ image }: SchemaContext) =>
     canonicalURL: z.url().optional(),
     /** Override the generated route, either relative to its type or root-relative. */
     permalink: z.string().min(1).optional(),
+    /** Select the homepage preview source, overriding the content-type default. */
+    preview: z.enum(["description", "excerpt"]).optional(),
     comments: z.boolean().optional(),
     toc: z.boolean().default(true),
     /** Pin to top of listings. */

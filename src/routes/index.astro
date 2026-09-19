@@ -74,6 +74,8 @@ const recentPosts = showcaseCandidates
       image: heroImage(post),
       hasImage: shouldShowHero(post),
       preview: previewHtml(post),
+      previewMode:
+        post.data.preview ?? SITE.contentTypes[type]?.preview ?? "description",
       authors: postAuthors(post)
         .map((author) => author.name)
         .join(", "),
@@ -82,9 +84,11 @@ const recentPosts = showcaseCandidates
 const showRecentAuthors = hasDistinctAuthors(
   recentPosts.map(({ post }) => post),
 );
-const tipEntries = tips
-  .slice(0, TIP_LIMIT)
-  .map((post) => ({ post, preview: previewHtml(post) }));
+const tipEntries = tips.slice(0, TIP_LIMIT).map((post) => ({
+  post,
+  preview: previewHtml(post),
+  previewMode: post.data.preview ?? tipsConfig?.preview ?? "description",
+}));
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description} hidePanel>
@@ -141,7 +145,7 @@ const tipEntries = tips
           <div class="recent-reel__slides" aria-live="off">
             {recentPosts.map(
               (
-                { post, type, image, hasImage, preview, authors },
+                { post, type, image, hasImage, preview, previewMode, authors },
                 index,
               ) => (
                 <article
@@ -184,7 +188,7 @@ const tipEntries = tips
                         </time>
                       </div>
                     </div>
-                    {SITE.contentTypes[type]?.preview !== "excerpt" || !preview ? (
+                    {previewMode !== "excerpt" || !preview ? (
                       <p class="latest-story__preview latest-story__description">
                         {post.data.description}
                       </p>
@@ -277,7 +281,7 @@ const tipEntries = tips
             </div>
           </header>
           <div class="tip-feed">
-            {tipEntries.map(({ post, preview }, index) => (
+            {tipEntries.map(({ post, preview, previewMode }, index) => (
               <article class="tip-feed__item">
                 <span class="tip-feed__index">
                   {String(index + 1).padStart(2, "0")}
@@ -292,7 +296,7 @@ const tipEntries = tips
                     class="tip-feed__body tip-feed__body--preview prose-site"
                     data-block-preview
                   >
-                    {tipsConfig?.preview === "excerpt" && preview ? (
+                    {previewMode === "excerpt" && preview ? (
                       <Fragment set:html={preview.html} />
                     ) : (
                       <p>{post.data.description}</p>

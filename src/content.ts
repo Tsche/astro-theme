@@ -116,10 +116,12 @@ const posts = defineCollection({
 
 export const pageFrontmatter = (ctx: SchemaContext) =>
   baseFrontmatter(ctx)
-    .partial({ pubDate: true })
+    .partial({ pubDate: true, description: true })
     .extend({
       /** Pages don't paginate or appear in archives. */
       showInNav: z.boolean().default(false),
+      /** Hide the rendered page title and description header. */
+      showHeader: z.boolean().default(true),
     });
 
 const pages = defineCollection({

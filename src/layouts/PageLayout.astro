@@ -4,13 +4,21 @@ import { SITE } from "@astro-theme-site/config";
 
 interface Props {
   title: string;
-  description: string;
+  description?: string;
   crumbs?: Array<{ label: string; href?: string }>;
   /** Load KaTeX CSS for this page only (no global load). */
   math?: boolean;
+  /** Hide the rendered title and description header. */
+  showHeader?: boolean;
 }
 
-const { title, description, crumbs, math = false } = Astro.props;
+const {
+  title,
+  description,
+  crumbs,
+  math = false,
+  showHeader = true,
+} = Astro.props;
 
 let MathStylesComponent;
 if (math) {
@@ -30,12 +38,18 @@ const articleClass = SITE.boxedArticles
 >
   {math && MathStylesComponent && <MathStylesComponent />}
   <article class={articleClass}>
-    <header class="mb-6">
-      <h1 class="text-3xl leading-tight font-extrabold tracking-tight">
-        {title}
-      </h1>
-      {description && <p class="text-base-content/70 mt-2">{description}</p>}
-    </header>
+    {
+      showHeader && (
+        <header class="mb-6">
+          <h1 class="text-3xl leading-tight font-extrabold tracking-tight">
+            {title}
+          </h1>
+          {description && (
+            <p class="text-base-content/70 mt-2">{description}</p>
+          )}
+        </header>
+      )
+    }
     <div class="prose-site max-w-none">
       <slot />
     </div>

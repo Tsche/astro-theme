@@ -132,7 +132,13 @@ const decorated = items.map((h) => {
 
     function updateRootState() {
       const firstHeading = headingEls[0];
-      setRootActive(firstHeading.getBoundingClientRect().top > 96);
+      const firstHeadingTop = firstHeading.getBoundingClientRect().top;
+      const focusBoundary = Math.max(96, window.innerHeight * 0.3);
+      if (firstHeadingTop > focusBoundary) {
+        setRootActive(true);
+      } else if (rootLink?.dataset.active === "true") {
+        setActiveSection(firstHeading.id);
+      }
     }
 
     // Start at the page root until the first section reaches the TOC's focus line.

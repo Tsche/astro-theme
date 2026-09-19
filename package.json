@@ -83,6 +83,7 @@
     "./site": "./src/utils/site.ts",
     "./seo": "./src/utils/seo.ts",
     "./og-image": "./src/utils/og-image.ts",
+    "./content-preview": "./src/utils/content-preview.ts",
     "./posts": "./src/utils/posts.ts",
     "./content-path": "./src/utils/content-path.ts",
     "./env": "./src/env.d.ts",

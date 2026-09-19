@@ -1,11 +1,11 @@
 ---
-import { render } from "astro:content";
 import { Icon } from "astro-icon/components";
 import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
 import PostList from "@tsche/astro-blog-theme/components/PostList.astro";
 import Pagination from "@tsche/astro-blog-theme/components/Pagination.astro";
 import { formatDate, isoDate, sitePath } from "@tsche/astro-blog-theme/site";
 import { SITE } from "@astro-theme-site/config";
+import { previewHtml } from "@tsche/astro-blog-theme/content-preview";
 import {
   collectionFilterPath,
   categoryPath,
@@ -43,14 +43,13 @@ const pagePosts = posts.slice(
 );
 const showAuthors = hasDistinctAuthors(posts);
 const showCategories = hasDistinctCategories(posts);
-const renderedTips =
+const tipEntries =
   type === "tips"
-    ? await Promise.all(
-        pagePosts.map(async (post) => ({
-          post,
-          Content: (await render(post)).Content,
-        })),
-      )
+    ? pagePosts.map((post) => ({
+        post,
+        preview: previewHtml(post),
+        previewMode: post.data.preview ?? typeConfig.preview ?? "description",
+      }))
     : [];
 const updateDays =
   type === "updates"
@@ -148,8 +147,22 @@ const hrefForPage = (page: number) =>
                     </a>
                   ))}
                 </div>
-                <div class="tip-feed__body prose-site">
-                  <Content />
+                <div
+                  class="tip-feed__body tip-feed__body--preview prose-site"
+                  data-block-preview
+                >
+                  {previewMode === "excerpt" && preview ? (
+                    <Fragment set:html={preview.html} />
+                  ) : (
+                    <p>{post.data.description}</p>
+                  )}
+                  <a
+                    href={postPath(post)}
+                    class="content-preview__more"
+                    aria-label={`Continue reading ${post.data.title}`}
+                  >
+                    Read more <span aria-hidden="true">→</span>
+                  </a>
                 </div>
               </div>
               <span class="tip-feed__permalink" aria-hidden="true">

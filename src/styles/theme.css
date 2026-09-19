@@ -2263,10 +2263,6 @@ body {
   margin-right: auto;
   margin-left: auto;
 }
-.post-entry--tips,
-.post-entry--updates {
-  max-width: none;
-}
 .post-entry--tips > header {
   padding-bottom: 1.5rem;
   border-bottom: 3px solid var(--tip-color);

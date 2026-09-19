@@ -1,6 +1,8 @@
 ---
 import BaseLayout from "@tsche/astro-blog-theme/layouts/BaseLayout.astro";
 import { SITE } from "@astro-theme-site/config";
+import TableOfContents from "../components/TableOfContents.astro";
+import type { MarkdownHeading } from "astro";
 
 interface Props {
   title: string;
@@ -10,6 +12,10 @@ interface Props {
   math?: boolean;
   /** Hide the rendered title and description header. */
   showHeader?: boolean;
+  /** Render the page table of contents when headings are available. */
+  toc?: boolean;
+  /** Astro's headings array used to render the page table of contents. */
+  headings?: MarkdownHeading[];
 }
 
 const {
@@ -18,6 +24,8 @@ const {
   crumbs,
   math = false,
   showHeader = true,
+  toc = true,
+  headings = [],
 } = Astro.props;
 
 let MathStylesComponent;
@@ -37,6 +45,11 @@ const articleClass = SITE.boxedArticles
   crumbs={crumbs ?? [{ label: title }]}
 >
   {math && MathStylesComponent && <MathStylesComponent />}
+  {
+    toc && headings.length > 0 && (
+      <TableOfContents slot="aside-bottom" headings={headings} />
+    )
+  }
   <article class={articleClass}>
     {
       showHeader && (

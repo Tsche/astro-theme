@@ -5,7 +5,7 @@ import { SITE } from "@astro-theme-site/config";
 
 const entry = await getEntry("pages", "about");
 if (!entry) return Astro.rewrite("/404");
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
 ---
 
 <PageLayout
@@ -13,6 +13,8 @@ const { Content } = await render(entry);
   description={entry.data.description ?? SITE.description}
   math={entry.data.math}
   showHeader={entry.data.showHeader}
+  toc={entry.data.toc}
+  headings={headings}
 >
   <Content />
 </PageLayout>

@@ -233,54 +233,71 @@ if (post.data.math) {
     <PostNav prev={prev} next={next} />
   </article>
 
-  {
-    showHero && heroAsset && (
-      <dialog class="post-image-dialog" data-image-preview>
-        <div class="post-image-dialog__frame">
-          <button
-            type="button"
-            class="post-image-dialog__close"
-            data-image-preview-close
-            aria-label="Close image preview"
-          >
-            <Icon name="lucide:x" width={20} height={20} />
-          </button>
-          <SmartImage
-            src={heroAsset}
-            alt={heroAlt}
-            class="post-image-dialog__image"
-            widths={[640, 960, 1280, 1600]}
-            sizes="(max-width: 900px) 92vw, 88vw"
-            quality={90}
-          />
-        </div>
-      </dialog>
-    )
-  }
+  <dialog class="post-image-dialog" data-image-preview>
+    <div class="post-image-dialog__frame">
+      <button
+        type="button"
+        class="post-image-dialog__close"
+        data-image-preview-close
+        aria-label="Close image preview"
+      >
+        <Icon name="lucide:x" width={20} height={20} />
+      </button>
+      <img class="post-image-dialog__image" data-image-preview-image alt="" />
+      <p class="post-image-dialog__caption" data-image-preview-caption></p>
+    </div>
+  </dialog>
 </BaseLayout>
 
 <script>
   function setupImagePreview() {
+    const dialog = document.querySelector<HTMLDialogElement>(
+      "[data-image-preview]",
+    );
+    const previewImage = dialog?.querySelector<HTMLImageElement>(
+      "[data-image-preview-image]",
+    );
+    const caption = dialog?.querySelector<HTMLElement>(
+      "[data-image-preview-caption]",
+    );
+    const close = dialog?.querySelector<HTMLButtonElement>(
+      "[data-image-preview-close]",
+    );
+    if (!dialog || !previewImage || !caption || !close) return;
+
     document
-      .querySelectorAll<HTMLButtonElement>("[data-image-preview-trigger]")
-      .forEach((trigger) => {
-        if (trigger.dataset.ready) return;
-        trigger.dataset.ready = "true";
-        const dialog = trigger
-          .closest("main")
-          ?.querySelector<HTMLDialogElement>("[data-image-preview]");
-        const close = dialog?.querySelector<HTMLButtonElement>(
-          "[data-image-preview-close]",
-        );
-        if (!dialog || !close) return;
-        trigger.addEventListener("click", () => dialog.showModal());
-        close.addEventListener("click", () => dialog.close());
-        dialog.addEventListener("click", (event) => {
-          if (event.target === dialog) dialog.close();
+      .querySelectorAll<HTMLElement>(
+        "[data-image-preview-trigger], .post-entry .prose-site img",
+      )
+      .forEach((target) => {
+        if (target.dataset.ready) return;
+        target.dataset.ready = "true";
+        target.addEventListener("click", (event) => {
+          event.preventDefault();
+          const image =
+            target instanceof HTMLImageElement
+              ? target
+              : target.querySelector<HTMLImageElement>("img");
+          if (!image) return;
+          previewImage.src = image.currentSrc || image.src;
+          previewImage.alt = image.alt;
+          caption.textContent =
+            image
+              .closest("figure")
+              ?.querySelector("figcaption")
+              ?.textContent?.trim() || image.alt;
+          dialog.showModal();
         });
       });
+
+    if (!dialog.dataset.ready) {
+      dialog.dataset.ready = "true";
+      close.addEventListener("click", () => dialog.close());
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+    }
   }
   setupImagePreview();
   document.addEventListener("astro:page-load", setupImagePreview);
 </script>
-

@@ -501,6 +501,7 @@
     @apply border-base-300 mx-auto my-6 rounded-md border;
     max-width: 100%;
     height: auto;
+    cursor: zoom-in;
   }
 
   /* Figures — mirror the hero image treatment so the caption feels
@@ -558,29 +559,40 @@
     outline-offset: 3px;
   }
   .post-image-dialog {
-    width: min(92vw, 1200px);
+    width: 100vw;
+    height: 100vh;
     max-width: none;
-    max-height: 92vh;
-    border: 1px solid var(--color-base-300);
+    max-height: none;
+    border: 0;
     padding: 0;
     background: var(--color-base-100);
     color: var(--color-base-content);
   }
   .post-image-dialog::backdrop {
-    background: color-mix(in oklab, var(--color-base-content) 72%, transparent);
+    background: color-mix(in oklab, var(--color-base-content) 64%, transparent);
   }
   .post-image-dialog__frame {
     position: relative;
     display: grid;
     place-items: center;
-    max-height: 92vh;
-    padding: 2.5rem 1rem 1rem;
+    grid-template-rows: minmax(0, 1fr) auto;
+    width: 100%;
+    height: 100%;
+    padding: 4rem 1.5rem 1.5rem;
   }
   .post-image-dialog__image {
     display: block;
     max-width: 100%;
-    max-height: calc(92vh - 3.5rem);
+    max-height: 100%;
     object-fit: contain;
+  }
+  .post-image-dialog__caption {
+    max-width: 60rem;
+    margin: 1rem 0 0;
+    color: color-mix(in oklab, var(--color-base-content) 72%, transparent);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    text-align: center;
   }
   .post-image-dialog__close {
     position: absolute;
@@ -2071,6 +2083,14 @@ body {
   color: var(--tip-color, var(--ink-blue));
   font: 700 0.78rem var(--font-mono);
   white-space: nowrap;
+}
+.tip-feed__body.prose-site p:has(+ .content-preview__more) {
+  display: block;
+}
+.tip-feed__body .content-preview__more {
+  display: inline-flex;
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
 }
 .content-preview__more:hover {
   text-decoration: underline;

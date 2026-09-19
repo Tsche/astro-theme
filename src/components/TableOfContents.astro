@@ -47,7 +47,9 @@ const decorated = items.map((h) => {
       </h2>
       <ol class="toc-list space-y-1">
         <li class="toc-root">
-          <a href="#main">{title}</a>
+          <a href="#content-root" data-toc-root>
+            {title}
+          </a>
         </li>
         {decorated.map((h) => (
           <li class={`toc-level-${h.depth}`} data-toc-parent={h.parent}>
@@ -69,6 +71,7 @@ const decorated = items.map((h) => {
   function initSmartToc() {
     const root = document.querySelector<HTMLElement>(".toc");
     if (!root) return;
+    const rootLink = root.querySelector<HTMLAnchorElement>("[data-toc-root]");
     const links = root.querySelectorAll<HTMLAnchorElement>("[data-toc-link]");
     if (!links.length) return;
 
@@ -95,8 +98,19 @@ const decorated = items.map((h) => {
 
     if (!headingEls.length) return;
 
+    function setRootActive(active: boolean) {
+      if (active) {
+        rootLink?.setAttribute("data-active", "true");
+        links.forEach((a) => a.removeAttribute("data-active"));
+        items.forEach((li) => li.setAttribute("data-section-active", "false"));
+      } else {
+        rootLink?.removeAttribute("data-active");
+      }
+    }
+
     function setActiveSection(activeSlug: string) {
       const activeH2 = parentBySlug.get(activeSlug) ?? activeSlug;
+      setRootActive(false);
 
       links.forEach((a) =>
         a.dataset.tocLink === activeSlug
@@ -116,8 +130,13 @@ const decorated = items.map((h) => {
       });
     }
 
-    // Default: open the first section before any scroll happens.
-    if (headingEls.length) setActiveSection(headingEls[0].id);
+    function updateRootState() {
+      const firstHeading = headingEls[0];
+      setRootActive(firstHeading.getBoundingClientRect().top > 96);
+    }
+
+    // Start at the page root until the first section reaches the TOC's focus line.
+    updateRootState();
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -131,6 +150,7 @@ const decorated = items.map((h) => {
     );
 
     headingEls.forEach((h) => observer.observe(h));
+    window.addEventListener("scroll", updateRootState, { passive: true });
   }
 
   initSmartToc();

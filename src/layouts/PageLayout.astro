@@ -50,7 +50,7 @@ const articleClass = SITE.boxedArticles
       <TableOfContents slot="aside-bottom" title={title} headings={headings} />
     )
   }
-  <article class={articleClass}>
+  <article id="content-root" class={articleClass}>
     {
       showHeader && (
         <header class="mb-6">

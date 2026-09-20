@@ -3078,3 +3078,52 @@ body {
     font-size: 0.82rem;
   }
 }
+
+aside:not(.site-panel-rail) {
+  --aside-color: oklch(70% 0.13 230);
+
+  margin-block: 1.5rem;
+  padding: 0.75rem 1rem;
+
+  border-inline-start: 4px solid var(--aside-color);
+  border-radius: 0.375rem;
+
+  background-color: color-mix(
+    in oklab,
+    var(--aside-color) 10%,
+    transparent
+  );
+}
+
+/* Default / note */
+aside:not(.site-panel-rail):not([type]),
+aside:not(.site-panel-rail)[type="note"] {
+  --aside-color: oklch(70% 0.13 230);
+}
+
+/* Tip */
+aside:not(.site-panel-rail)[type="tip"] {
+  --aside-color: oklch(72% 0.15 145);
+}
+
+/* Caution */
+aside:not(.site-panel-rail)[type="caution"] {
+  --aside-color: oklch(80% 0.15 80);
+}
+
+/* Danger */
+aside:not(.site-panel-rail)[type="danger"] {
+  --aside-color: oklch(60% 0.22 27);
+}
+
+aside:not(.site-panel-rail) > :first-child {
+  margin-top: 0;
+}
+
+aside:not(.site-panel-rail) > :last-child {
+  margin-bottom: 0;
+}
+
+aside:not(.site-panel-rail) > .expressive-code {
+  margin-block: 1rem;
+}

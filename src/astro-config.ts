@@ -49,8 +49,8 @@ export const copyOptInPlugin = definePlugin({
 });
 
 export function defineBlogConfig(siteConfig: SiteConfig) {
-  const rawBase = (process.env.BASE_PATH ?? "/").replace(/\/$/, "");
-  const BASE = rawBase.startsWith("/") ? rawBase : `/${rawBase}`;
+  const rawBase = (process.env.BASE_PATH ?? "/").replace(/^\/+|\/+$/g, "");
+  const BASE = rawBase ? `/${rawBase}` : "";
   const SITEMAP_XSL_HREF = `${BASE}/sitemap/styles.xsl`;
   const SKIP_RSS_SITEMAP = process.env.CI_SKIP_RSS_SITEMAP === "true";
 

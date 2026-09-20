@@ -1944,6 +1944,9 @@ body {
   border-bottom: 1px solid var(--color-base-300);
   cursor: alias;
 }
+.tip-feed__item .expressive-code {
+  cursor: default;
+}
 .tip-feed__item:nth-child(odd) {
   padding-right: 2rem;
 }
